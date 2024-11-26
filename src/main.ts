@@ -1,5 +1,6 @@
-import Denomander from "https://deno.land/x/denomander/mod.ts";
+import Denomander from "https://deno.land/x/denomander@0.9.3/mod.ts";
 import init from "./commands/init.ts";
+import add from "./commands/add.ts";
 
 const program = new Denomander({
   app_name: "Tgit",
@@ -9,6 +10,10 @@ const program = new Denomander({
 
 program.command("init", "Initializes a repository").action(() => {
   init();
+});
+
+program.command("add", "Adds file/files to staging area").action(() => {
+  add();
 });
 
 program.parse(Deno.args);
