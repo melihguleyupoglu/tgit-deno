@@ -1,5 +1,9 @@
 export default function add(path: string) {
+  // Check if .tgit dir exists.
+
   if (path === ".") {
-    // Get the all files from current working directory
+    console.log(Deno.cwd());
   }
 }
+
+// const handleDirRead = (path: string) => {};
