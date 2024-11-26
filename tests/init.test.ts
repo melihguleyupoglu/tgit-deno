@@ -6,43 +6,74 @@ import { join } from "https://deno.land/std@0.197.0/path/mod.ts";
 const tgitDir = join(Deno.cwd(), ".tgit");
 
 Deno.test("init command - should create .tgit directory", () => {
-  if (fs.existsSync(tgitDir)) {
-    Deno.removeSync(tgitDir, { recursive: true });
+  cleanupTgitDir();
+
+  try {
+    init();
+
+    if (!fs.existsSync(tgitDir)) {
+      throw new Error(createErrorMessage(".tgit", tgitDir));
+    }
+
+    const objectsPath = join(tgitDir, "objects");
+    if (!fs.existsSync(objectsPath)) {
+      throw new Error(createErrorMessage("directory 'objects'", objectsPath));
+    }
+
+    const refsPath = join(tgitDir, "refs");
+    if (!fs.existsSync(refsPath)) {
+      throw new Error(createErrorMessage("directory 'refs'", refsPath));
+    }
+
+    const headPath = join(tgitDir, "HEAD");
+    if (!fs.existsSync(headPath)) {
+      throw new Error(createErrorMessage("file 'head'", headPath));
+    }
+
+    const indexPath = join(tgitDir, "index");
+    if (!fs.existsSync(indexPath)) {
+      throw new Error(createErrorMessage("file 'index'", indexPath));
+    }
+  } finally {
+    cleanupTgitDir();
   }
-
-  // Init fonksiyonunu çalıştır
-  init();
-
-  // Kontroller
-  if (!fs.existsSync(tgitDir)) throw new Error(".tgit directory not created!");
-  if (!fs.existsSync(join(tgitDir, "HEAD")))
-    throw new Error("HEAD file missing!");
-  if (!fs.existsSync(join(tgitDir, "index")))
-    throw new Error("index file missing!");
 });
 
 Deno.test(
   "init command - should not overwrite an existing .tgit directory",
   () => {
-    // Mevcut bir `.tgit` klasörü oluştur
+    // Cleanup before test
+    cleanupTgitDir();
+
     fs.ensureDirSync(tgitDir);
 
-    // Konsol çıktısını izlemek için
     const consoleSpy = { messages: [] as string[] };
     const originalConsoleLog = console.log;
     console.log = (message: string) => consoleSpy.messages.push(message);
 
-    // Init fonksiyonunu çalıştır
-    init();
+    try {
+      init();
 
-    // Test: "Repository already initialized!" mesajını kontrol et
-    if (!consoleSpy.messages.includes("Repository already initialized!")) {
-      throw new Error(
-        "Expected 'Repository already initialized!' log message not found!"
-      );
+      if (!consoleSpy.messages.includes("Repository already initialized!")) {
+        throw new Error(
+          "Expected 'Repository already initialized!' log message not found!"
+        );
+      }
+    } finally {
+      console.log = originalConsoleLog; // Return console log functionality
     }
 
-    // Konsolu eski haline döndür
-    console.log = originalConsoleLog;
+    // Cleanup after test
+    cleanupTgitDir();
   }
 );
+
+function cleanupTgitDir() {
+  if (fs.existsSync(tgitDir)) {
+    Deno.removeSync(tgitDir, { recursive: true });
+  }
+}
+
+function createErrorMessage(missingItem: string, location: string) {
+  return `Expected ${missingItem} is missing in ${location}`;
+}
