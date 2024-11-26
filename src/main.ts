@@ -12,8 +12,15 @@ program.command("init", "Initializes a repository").action(() => {
   init();
 });
 
-program.command("add", "Adds file/files to staging area").action(() => {
-  add();
-});
+program
+  .command("add", "Adds file/files to staging area")
+  .action(({ args }: { args: string[] }) => {
+    const path = args[0] || ".";
+
+    if (typeof path !== "string" || path.trim() === "") {
+      throw new Error("Invalid path provided.");
+    }
+    add(path);
+  });
 
 program.parse(Deno.args);
