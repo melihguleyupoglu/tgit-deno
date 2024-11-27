@@ -12,6 +12,7 @@ export default async function add(fileOrDirectoryPath: string): Promise<void> {
       if (dirEntry.isFile) {
         const entry = await createIndexEntry(relativePath);
         await writeToIndex(entry);
+        console.log(`Added: ${dirEntry.name}`);
       } else if (dirEntry.isDirectory) {
         await add(relativePath);
       }
@@ -19,6 +20,7 @@ export default async function add(fileOrDirectoryPath: string): Promise<void> {
   } else {
     const entry = await createIndexEntry(fileOrDirectoryPath);
     await writeToIndex(entry);
+    console.log(`Added: ${fileOrDirectoryPath}`);
   }
 }
 
@@ -36,9 +38,15 @@ async function createIndexEntry(fileOrDirectoryPath: string): Promise<string> {
 }
 
 function getFilePermissions(fileOrDirectoryPath: string): string {
-  const fileInfo = Deno.lstatSync(fileOrDirectoryPath);
-  const permissions = fileInfo.mode?.toString(8).padStart(6, "0");
-  return permissions || "000000";
+  try {
+    const fileInfo = Deno.lstatSync(fileOrDirectoryPath);
+    const permissions = fileInfo.mode?.toString(8).padStart(6, "0");
+    return permissions || "000000";
+  } catch (error) {
+    throw new Error(
+      `Failed to get permissions for ${fileOrDirectoryPath}: ${error}`
+    );
+  }
 }
 
 async function computeFileHash(filePath: string): Promise<string> {
