@@ -68,7 +68,7 @@ Deno.test(
   }
 );
 
-function cleanupTgitDir() {
+export function cleanupTgitDir() {
   if (fs.existsSync(tgitDir)) {
     Deno.removeSync(tgitDir, { recursive: true });
   }
