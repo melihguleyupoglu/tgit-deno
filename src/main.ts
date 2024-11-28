@@ -14,9 +14,9 @@ program.command("init", "Initializes a repository").action(() => {
 
 program
   .command("add", "Adds file/files to staging area")
-  .action(({ args }: { args: string[] }) => {
-    const path = args[0] || ".";
-
+  .option("-p --path", "Path to file or directory")
+  .action(() => {
+    const path = program.path || ".";
     if (typeof path !== "string" || path.trim() === "") {
       throw new Error("Invalid path provided.");
     }
