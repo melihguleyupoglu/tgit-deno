@@ -7,15 +7,14 @@ export default async function add(fileOrDirectoryPath: string): Promise<void> {
   if (fileOrDirectoryPath === "." || isDirectory(fileOrDirectoryPath)) {
     for await (const dirEntry of Deno.readDir(fileOrDirectoryPath)) {
       const fullPath = path.join(fileOrDirectoryPath, dirEntry.name);
-      const relativePath = path.relative(Deno.cwd(), fullPath);
-      const fileInfo = await Deno.lstat(relativePath);
+      const fileInfo = await Deno.lstat(fullPath);
       const isSymlink = fileInfo.isSymlink;
 
       if (!isSymlink) {
         if (dirEntry.isFile) {
-          await processEntry(relativePath);
+          await processEntry(fullPath);
         } else if (dirEntry.isDirectory) {
-          await add(relativePath);
+          await add(fullPath);
         }
       }
     }
@@ -34,10 +33,10 @@ async function processEntry(relativePath: string): Promise<void> {
   }
 }
 
-async function createIndexEntry(fileOrDirectoryPath: string): Promise<string> {
-  const permissions = getFilePermissions(fileOrDirectoryPath);
-  const hash = await computeFileHash(fileOrDirectoryPath);
-  const entry = `${permissions} ${hash} ${fileOrDirectoryPath}`;
+async function createIndexEntry(relativePath: string): Promise<string> {
+  const permissions = getFilePermissions(relativePath);
+  const hash = await computeFileHash(relativePath);
+  const entry = `${permissions} ${hash} ${relativePath}`;
   return entry;
 }
 
@@ -47,21 +46,19 @@ async function writeToIndex(entry: string): Promise<void> {
   await Deno.writeTextFile(indexPath, entry + "\n", { append: true });
 }
 
-function getFilePermissions(fileOrDirectoryPath: string): string {
+function getFilePermissions(relativePath: string): string {
   try {
-    const fileInfo = Deno.lstatSync(fileOrDirectoryPath);
+    const fileInfo = Deno.lstatSync(relativePath);
     const permissions = fileInfo.mode?.toString(8).padStart(6, "0");
     return permissions || "000000";
   } catch (error) {
-    throw new Error(
-      `Failed to get permissions for ${fileOrDirectoryPath}: ${error}`
-    );
+    throw new Error(`Failed to get permissions for ${relativePath}: ${error}`);
   }
 }
 
-async function computeFileHash(filePath: string): Promise<string> {
+async function computeFileHash(relativePath: string): Promise<string> {
   try {
-    const fileContent = await Deno.readFile(filePath);
+    const fileContent = await Deno.readFile(relativePath);
     const hashBuffer = await crypto.subtle.digest("SHA-1", fileContent);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray
@@ -69,17 +66,19 @@ async function computeFileHash(filePath: string): Promise<string> {
       .join("");
     return hashHex;
   } catch (error) {
-    throw new Error(`Error computing the hash for file ${filePath} -${error}`);
+    throw new Error(
+      `Error computing the hash for file ${relativePath} -${error}`
+    );
   }
 }
 
-function isDirectory(fileOrDirectoryPath: string): boolean {
+function isDirectory(relativePath: string): boolean {
   try {
-    const fileInfo = Deno.lstatSync(fileOrDirectoryPath);
+    const fileInfo = Deno.lstatSync(relativePath);
     return fileInfo.isDirectory;
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
-      throw new Error(`Error: Path not found - ${fileOrDirectoryPath}`);
+      throw new Error(`Error: Path not found - ${relativePath}`);
     } else {
       throw new Error(`Error checking path: ${error}`);
     }
