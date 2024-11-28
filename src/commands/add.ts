@@ -17,10 +17,10 @@ export default async function add(fileOrDirectoryPath: string): Promise<void> {
         } else if (dirEntry.isDirectory) {
           await add(relativePath);
         }
-      } else {
-        await processEntry(relativePath);
       }
     }
+  } else {
+    await processEntry(fileOrDirectoryPath);
   }
 }
 
