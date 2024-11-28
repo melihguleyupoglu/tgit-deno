@@ -8,26 +8,30 @@ export default async function add(fileOrDirectoryPath: string): Promise<void> {
     for await (const dirEntry of Deno.readDir(fileOrDirectoryPath)) {
       const fullPath = path.join(fileOrDirectoryPath, dirEntry.name);
       const relativePath = path.relative(Deno.cwd(), fullPath);
+      const fileInfo = await Deno.lstat(relativePath);
+      const isSymlink = fileInfo.isSymlink;
 
-      if (dirEntry.isFile) {
-        const entry = await createIndexEntry(relativePath);
-        await writeToIndex(entry);
-        console.log(`Added: ${dirEntry.name}`);
-      } else if (dirEntry.isDirectory) {
-        await add(relativePath);
+      if (!isSymlink) {
+        if (dirEntry.isFile) {
+          await processEntry(relativePath);
+        } else if (dirEntry.isDirectory) {
+          await add(relativePath);
+        }
+      } else {
+        await processEntry(relativePath);
       }
     }
-  } else {
-    const entry = await createIndexEntry(fileOrDirectoryPath);
-    await writeToIndex(entry);
-    console.log(`Added: ${fileOrDirectoryPath}`);
   }
 }
 
-async function writeToIndex(entry: string): Promise<void> {
-  const indexPath = path.join(Deno.cwd(), ".tgit", "index");
-  await ensureFile(indexPath);
-  await Deno.writeTextFile(indexPath, entry + "\n", { append: true });
+async function processEntry(relativePath: string): Promise<void> {
+  try {
+    const entry = await createIndexEntry(relativePath);
+    await writeToIndex(entry);
+    console.log(`Added: ${relativePath}`);
+  } catch (error) {
+    console.log(`Error processing: ${relativePath} - ${error}`);
+  }
 }
 
 async function createIndexEntry(fileOrDirectoryPath: string): Promise<string> {
@@ -35,6 +39,12 @@ async function createIndexEntry(fileOrDirectoryPath: string): Promise<string> {
   const hash = await computeFileHash(fileOrDirectoryPath);
   const entry = `${permissions} ${hash} ${fileOrDirectoryPath}`;
   return entry;
+}
+
+async function writeToIndex(entry: string): Promise<void> {
+  const indexPath = path.join(Deno.cwd(), ".tgit", "index");
+  await ensureFile(indexPath);
+  await Deno.writeTextFile(indexPath, entry + "\n", { append: true });
 }
 
 function getFilePermissions(fileOrDirectoryPath: string): string {
