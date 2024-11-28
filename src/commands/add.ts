@@ -1,5 +1,4 @@
 import * as path from "@std/path";
-import { ensureFile } from "@std/fs/ensure-file";
 
 export default async function add(fileOrDirectoryPath: string): Promise<void> {
   checkTgitDirectory();
@@ -42,7 +41,6 @@ async function createIndexEntry(relativePath: string): Promise<string> {
 
 async function writeToIndex(entry: string): Promise<void> {
   const indexPath = path.join(Deno.cwd(), ".tgit", "index");
-  await ensureFile(indexPath);
   await Deno.writeTextFile(indexPath, entry + "\n", { append: true });
 }
 
