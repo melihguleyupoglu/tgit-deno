@@ -26,14 +26,13 @@ export default async function add(fileOrDirectoryPath: string): Promise<void> {
 
 // in processEntry check for duplication if have it just call updateIndex function not writeToIndex.
 
-async function updateIndex(entry: string, lines: string[]): Promise<void> {
-  const entryPath = entry.split(" ")[2];
-  const updatedLines = lines.map((line) => {
-    const parts = line.split(" ");
-    const indexFilePath = parts[2];
-    return indexFilePath === entryPath ? entry : line;
-  });
-  await Deno.writeTextFile(indexPath, updatedLines.join("\n"));
+async function updateIndex(
+  entry: string,
+  lines: string[],
+  lineIndex: number
+): Promise<void> {
+  lines[lineIndex] = entry;
+  await Deno.writeTextFile(indexPath, lines.join("\n"));
 }
 
 //we can just simply give line parameter to updateIndex and make the process faster.
@@ -41,14 +40,15 @@ async function updateIndex(entry: string, lines: string[]): Promise<void> {
 function checkIndexForDuplicateEntry(
   entryPath: string,
   lines: string[]
-): boolean {
-  for (const line of lines) {
+): { exists: boolean; lineIndex: number | null } {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     const parts = line.split(" ");
     if (parts.length === 3 && parts[2] === entryPath) {
-      return true;
+      return { exists: true, lineIndex: i };
     }
   }
-  return false;
+  return { exists: false, lineIndex: null };
 }
 
 async function processEntry(relativePath: string): Promise<void> {
@@ -57,12 +57,15 @@ async function processEntry(relativePath: string): Promise<void> {
     const indexContent = await Deno.readTextFile(indexPath);
     const lines = indexContent.split("\n");
 
-    const isDuplicate = await checkIndexForDuplicateEntry(relativePath, lines);
-    if (!isDuplicate) {
+    const { exists, lineIndex } = checkIndexForDuplicateEntry(
+      relativePath,
+      lines
+    );
+    if (!exists) {
       await writeToIndex(entry);
       console.log(`Added: ${relativePath}`);
     } else {
-      await updateIndex(entry, lines);
+      if (lineIndex) await updateIndex(entry, lines, lineIndex);
       console.log(`Updated: ${relativePath}`);
     }
   } catch (error) {
