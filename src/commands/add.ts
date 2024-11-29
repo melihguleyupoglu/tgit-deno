@@ -1,5 +1,7 @@
 import * as path from "@std/path";
 
+const indexPath = path.join(Deno.cwd(), ".tgit", "index");
+
 export default async function add(fileOrDirectoryPath: string): Promise<void> {
   checkTgitDirectory();
 
@@ -22,11 +24,47 @@ export default async function add(fileOrDirectoryPath: string): Promise<void> {
   }
 }
 
+// in processEntry check for duplication if have it just call updateIndex function not writeToIndex.
+
+async function updateIndex(entry: string, lines: string[]): Promise<void> {
+  const entryPath = entry.split(" ")[2];
+  const updatedLines = lines.map((line) => {
+    const parts = line.split(" ");
+    const indexFilePath = parts[2];
+    return indexFilePath === entryPath ? entry : line;
+  });
+  await Deno.writeTextFile(indexPath, updatedLines.join("\n"));
+}
+
+//we can just simply give line parameter to updateIndex and make the process faster.
+
+function checkIndexForDuplicateEntry(
+  entryPath: string,
+  lines: string[]
+): boolean {
+  for (const line of lines) {
+    const parts = line.split(" ");
+    if (parts.length === 3 && parts[2] === entryPath) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function processEntry(relativePath: string): Promise<void> {
   try {
     const entry = await createIndexEntry(relativePath);
-    await writeToIndex(entry);
-    console.log(`Added: ${relativePath}`);
+    const indexContent = await Deno.readTextFile(indexPath);
+    const lines = indexContent.split("\n");
+
+    const isDuplicate = await checkIndexForDuplicateEntry(relativePath, lines);
+    if (!isDuplicate) {
+      await writeToIndex(entry);
+      console.log(`Added: ${relativePath}`);
+    } else {
+      await updateIndex(entry, lines);
+      console.log(`Updated: ${relativePath}`);
+    }
   } catch (error) {
     console.log(`Error processing: ${relativePath} - ${error}`);
   }
