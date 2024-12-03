@@ -17,7 +17,6 @@ Deno.test(
   }
 );
 
-// directory
 Deno.test("add commmand - should add all directory content ", async () => {
   init();
 
@@ -42,7 +41,7 @@ Deno.test("add commmand - should add all directory content ", async () => {
     expect(consoleSpy.messages).toContain(`Added: ${examplePath}`);
     expect(consoleSpy.messages).toContain(`Added: ${examplePathTwo}`);
   } catch (e) {
-    console.log(e);
+    console.error(e);
   } finally {
     console.log = originalConsoleLog;
 
@@ -50,7 +49,6 @@ Deno.test("add commmand - should add all directory content ", async () => {
   }
 });
 
-// single file
 Deno.test("add command - should add file to index", async () => {
   init();
 
@@ -65,15 +63,35 @@ Deno.test("add command - should add file to index", async () => {
 
     expect(consoleSpy.messages).toContain(`Added: ${exampleFilePath}`);
   } catch (e) {
-    console.log(e);
+    console.error(e);
   } finally {
     console.log = originalConsoleLog;
 
-    Deno.removeSync("example_file.txt", { recursive: true });
+    Deno.removeSync("example_file.txt");
   }
 });
 
-// same file updated on index
+Deno.test("add command - should update changed files in index", () => {
+  init();
+
+  const originalConsoleLog = console.log;
+  const consoleSpy = { messages: [] as string[] };
+  console.log = (message: string) => consoleSpy.messages.push(message);
+  try {
+    const filePath = path.join(process.cwd(), "example_file.txt");
+    writeFileSync(filePath, "hello");
+    add(filePath);
+    writeFileSync(filePath, "hello world");
+    add(filePath);
+    expect(consoleSpy.messages).toContain(`Updated: ${filePath}`);
+  } catch (e) {
+    console.error(e);
+  } finally {
+    console.log = originalConsoleLog;
+
+    Deno.removeSync("example_file.txt");
+  }
+});
 
 // ensure about index format of each file
 
