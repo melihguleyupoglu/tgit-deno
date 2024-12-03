@@ -1,6 +1,6 @@
 import * as path from "@std/path";
 
-const indexPath = path.join(Deno.cwd(), ".tgit", "index");
+export const indexPath = path.join(Deno.cwd(), ".tgit", "index");
 
 export default async function add(fileOrDirectoryPath: string): Promise<void> {
   checkTgitDirectory();
@@ -34,8 +34,6 @@ async function updateIndex(
   lines[lineIndex] = entry;
   await Deno.writeTextFile(indexPath, lines.join("\n"));
 }
-
-//we can just simply give line parameter to updateIndex and make the process faster.
 
 function checkIndexForDuplicateEntry(
   entryPath: string,
