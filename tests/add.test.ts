@@ -6,6 +6,8 @@ import * as path from "@std/path";
 import { writeFileSync } from "node:fs";
 import process from "node:process";
 
+const tgitPath = path.join(Deno.cwd(), ".tgit");
+
 Deno.test(
   "add command - should throw error if no .tgit found in the current dir",
   async () => {
@@ -46,6 +48,7 @@ Deno.test("add commmand - should add all directory content ", async () => {
     console.log = originalConsoleLog;
 
     Deno.removeSync("ex_dir", { recursive: true });
+    Deno.removeSync(tgitPath, { recursive: true });
   }
 });
 
@@ -68,6 +71,7 @@ Deno.test("add command - should add file to index", async () => {
     console.log = originalConsoleLog;
 
     Deno.removeSync("example_file.txt");
+    Deno.removeSync(tgitPath, { recursive: true });
   }
 });
 
@@ -90,6 +94,31 @@ Deno.test("add command - should update changed files in index", () => {
     console.log = originalConsoleLog;
 
     Deno.removeSync("example_file.txt");
+    Deno.removeSync(tgitPath, { recursive: true });
+  }
+});
+
+Deno.test("add command - should handle binary files", async () => {
+  init();
+
+  const originalConsoleLog = console.log;
+  const consoleSpy = { messages: [] as string[] };
+  console.log = (message: string) => consoleSpy.messages.push(message);
+
+  try {
+    const binaryFilePath = path.join(Deno.cwd(), "image.png");
+    const binaryContent = new Uint8Array([0x89, 0x50, 0x4e, 0x48]);
+    Deno.writeFileSync(binaryFilePath, binaryContent);
+
+    await add(binaryFilePath);
+
+    expect(consoleSpy.messages).toContain(`Added: ${binaryFilePath}`);
+  } catch (e) {
+    console.error(e);
+  } finally {
+    console.log = originalConsoleLog;
+    Deno.removeSync("image.png");
+    Deno.removeSync(tgitPath, { recursive: true });
   }
 });
 
