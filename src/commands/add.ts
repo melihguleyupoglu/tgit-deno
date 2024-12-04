@@ -122,7 +122,7 @@ function isDirectory(relativePath: string): boolean {
   }
 }
 
-function checkTgitDirectory(): void {
+export function checkTgitDirectory(): void {
   const tgitDir = path.join(Deno.cwd(), ".tgit");
   try {
     const fileInfo = Deno.lstatSync(tgitDir);
