@@ -4,6 +4,7 @@ export const indexPath = path.join(Deno.cwd(), ".tgit", "index");
 
 export default async function add(fileOrDirectoryPath: string): Promise<void> {
   checkTgitDirectory();
+  await checkPath(fileOrDirectoryPath);
 
   if (fileOrDirectoryPath === "." || isDirectory(fileOrDirectoryPath)) {
     for await (const dirEntry of Deno.readDir(fileOrDirectoryPath)) {
@@ -119,6 +120,19 @@ function isDirectory(relativePath: string): boolean {
     } else {
       throw new Error(`Error checking path: ${error}`);
     }
+  }
+}
+
+async function checkPath(relativePath: string): Promise<void> {
+  try {
+    await Deno.stat(relativePath);
+  } catch (e) {
+    if (e instanceof Deno.errors.NotFound) {
+      throw new Error(
+        `${relativePath} not found in the current working directory`
+      );
+    }
+    throw e;
   }
 }
 

@@ -123,19 +123,17 @@ Deno.test("add command - should handle binary files", async () => {
   }
 });
 
-// Deno.test(
-//   "add command - should throw if file/directory not found",
-//   async () => {
-//     try {
-//       init();
+Deno.test(
+  "add command - should throw if file/directory not found",
+  async () => {
+    try {
+      init();
 
-//       await expect(async () => {
-//         await add("not_found.txt");
-//       }).rejects.toThrow(
-//         "not_found.txt not found in the current working directory"
-//       );
-//     } finally {
-//       cleanupTgitDir();
-//     }
-//   }
-// );
+      await expect(add("not_found.txt")).rejects.toThrow(
+        "not_found.txt not found in the current working directory"
+      );
+    } finally {
+      cleanupTgitDir();
+    }
+  }
+);
