@@ -3,6 +3,7 @@ import init from "./commands/init.ts";
 import add from "./commands/add.ts";
 import rm from "./commands/rm.ts";
 import { existsSync, lstatSync } from "node:fs";
+import { config } from "node:process";
 
 const program = new Denomander({
   app_name: "Tgit",
@@ -42,6 +43,28 @@ program
       }
     }
     rm(path, program.recursive);
+  });
+
+program
+  .command("config", "Sets or retrieves configuration")
+  .option("-s --set", "Set a configuration value")
+  .option("-g --get", "Get a configuration value")
+  .option("-l --list", "List all configuration values")
+  .action(() => {
+    if (program.set) {
+      const [key, value] = program.set.split("=");
+      if (!key || !value) {
+        throw new Error("Invalid format for --set. Use: --set key=value");
+      }
+      config.set(key, value);
+    } else if (program.get) {
+      const value = config.get(program.get);
+      console.log(value || `No value found for key ${program.get}`);
+    } else if (program.list) {
+      config.list();
+    } else {
+      throw new Error("Please provide a valid option: --set, --get, or --list");
+    }
   });
 
 program.parse(Deno.args);
