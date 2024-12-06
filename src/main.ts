@@ -3,8 +3,12 @@ import init from "./commands/init.ts";
 import add from "./commands/add.ts";
 import rm from "./commands/rm.ts";
 import { existsSync, lstatSync } from "node:fs";
-import config from "./commands/config.ts";
+import config from "./config/config.ts";
 import * as path from "@std/path";
+import {
+  ensureConfigFileExists,
+  readConfigFile,
+} from "./config/configUtils.ts";
 
 const program = new Denomander({
   app_name: "Tgit",
@@ -52,8 +56,8 @@ program
   .option("-g --get", "Get a configuration value")
   .option("-l --list", "List all configuration values")
   .action(() => {
-    const configFilePath = path.join(Deno.cwd(), ".tgit", "config");
-    const configContent = Deno.readTextFileSync(configFilePath);
+    ensureConfigFileExists();
+    const configContent = readConfigFile();
 
     if (program.set) {
       const [key, value] = program.set.split("=");
