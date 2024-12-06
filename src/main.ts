@@ -3,8 +3,8 @@ import init from "./commands/init.ts";
 import add from "./commands/add.ts";
 import rm from "./commands/rm.ts";
 import { existsSync, lstatSync } from "node:fs";
-// import { config } from "node:process";
 import config from "./commands/config.ts";
+import * as path from "@std/path";
 
 const program = new Denomander({
   app_name: "Tgit",
@@ -52,17 +52,20 @@ program
   .option("-g --get", "Get a configuration value")
   .option("-l --list", "List all configuration values")
   .action(() => {
+    const configFilePath = path.join(Deno.cwd(), ".tgit", "config");
+    const configContent = Deno.readTextFileSync(configFilePath);
+
     if (program.set) {
       const [key, value] = program.set.split("=");
       if (!key || !value) {
         throw new Error("Invalid format for --set. Use: --set key=value");
       }
-      config.set(key, value);
+      config.set(key, value, configContent);
     } else if (program.get) {
-      const value = config.get(program.get);
+      const value = config.get(program.get, configContent);
       console.log(typeof value === "string" ? `${value}` : `value not found`);
     } else if (program.list) {
-      config.list();
+      config.list(configContent);
     } else {
       throw new Error("Please provide a valid option: --set, --get, or --list");
     }

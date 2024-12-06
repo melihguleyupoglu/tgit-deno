@@ -1,5 +1,4 @@
 import * as path from "@std/path";
-
 const configFilePath = path.join(Deno.cwd(), ".tgit", "config");
 
 function ensureConfigFileExists() {
@@ -11,7 +10,7 @@ function ensureConfigFileExists() {
 }
 
 export default {
-  set(key: string, value: string) {
+  set(key: string, value: string, configContent: string) {
     ensureConfigFileExists();
     const configContent = Deno.readTextFileSync(configFilePath);
     const lines = configContent.split("\n");
@@ -22,6 +21,6 @@ export default {
       lines.push(`${key} = ${value}`);
     }
   },
-  get(key: string) {},
-  list() {},
+  get(key: string, configContent: string) {},
+  list(configContent: string) {},
 };
