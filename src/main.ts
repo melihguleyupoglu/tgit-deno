@@ -4,7 +4,6 @@ import add from "./commands/add.ts";
 import rm from "./commands/rm.ts";
 import { existsSync, lstatSync } from "node:fs";
 import config from "./config/config.ts";
-import * as path from "@std/path";
 import {
   ensureConfigFileExists,
   readConfigFile,

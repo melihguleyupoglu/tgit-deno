@@ -12,3 +12,7 @@ export function ensureConfigFileExists() {
 export function readConfigFile(): string {
   return Deno.readTextFileSync(configFilePath);
 }
+
+export function writeConfigFile(lines: string[]): void {
+  Deno.writeTextFileSync(configFilePath, lines.join("\n"));
+}
