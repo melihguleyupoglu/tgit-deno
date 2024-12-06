@@ -3,7 +3,8 @@ import init from "./commands/init.ts";
 import add from "./commands/add.ts";
 import rm from "./commands/rm.ts";
 import { existsSync, lstatSync } from "node:fs";
-import { config } from "node:process";
+// import { config } from "node:process";
+import config from "./commands/config.ts";
 
 const program = new Denomander({
   app_name: "Tgit",
@@ -59,7 +60,7 @@ program
       config.set(key, value);
     } else if (program.get) {
       const value = config.get(program.get);
-      console.log(value || `No value found for key ${program.get}`);
+      console.log(typeof value === "string" ? `${value}` : `value not found`);
     } else if (program.list) {
       config.list();
     } else {
