@@ -59,19 +59,7 @@ async function readIndexEntries(): Promise<StagingAreaEntry[]> {
   }
 }
 
-// async function createTree(
-//   stagingAreaEntries: StagingAreaEntry[]
-// ): Promise<string> {
-//   let treeContent = "";
-
-//   for (const { permission, blob, path } of stagingAreaEntries) {
-//     const entry = `${permission} ${blob}`;
-//   }
-// }
-
-function groupEntriesByDirectory(
-  stagingAreaEntries: StagingAreaEntry[]
-): GroupedEntries {
+function createTree(stagingAreaEntries: StagingAreaEntry[]): GroupedEntries {
   const grouped: GroupedEntries = {
     files: [],
     directories: {},
@@ -98,7 +86,7 @@ function groupEntriesByDirectory(
         blob: entry.blob,
         path: remainingPath,
       };
-      const subGrouped = groupEntriesByDirectory([subEntry]);
+      const subGrouped = createTree([subEntry]);
 
       grouped.directories[dir].files.push(...subGrouped.files);
       grouped.directories[dir].directories = {
