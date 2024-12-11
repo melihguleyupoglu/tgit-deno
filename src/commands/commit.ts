@@ -6,6 +6,11 @@ interface StagingAreaEntry {
   path: string;
 }
 
+interface GroupedEntries {
+  files: StagingAreaEntry[];
+  directories: { [key: string]: GroupedEntries };
+}
+
 export async function commit() {
   if (isIndexEmpty()) {
     console.error("No changes to commit.");
@@ -53,3 +58,13 @@ async function readIndexEntries(): Promise<StagingAreaEntry[]> {
     return [];
   }
 }
+
+// async function createTree(
+//   stagingAreaEntries: StagingAreaEntry[]
+// ): Promise<string> {
+//   let treeContent = "";
+
+//   for (const { permission, blob, path } of stagingAreaEntries) {
+//     const entry = `${permission} ${blob}`;
+//   }
+// }
