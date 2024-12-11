@@ -1,5 +1,11 @@
 import { indexPath } from "./add.ts";
 
+interface StagingAreaEntry {
+  permission: string;
+  blob: string;
+  path: string;
+}
+
 export async function commit() {
   if (isIndexEmpty()) {
     console.error("No changes to commit.");
@@ -20,29 +26,4 @@ function isIndexEmpty(): boolean {
     }
     throw e;
   }
-}
-
-function getDirectories(indexContent: string): string[] {
-  const directories: string[] = [];
-  try {
-    const lines = indexContent.split("\n");
-    for (const line of lines) {
-      const parts = line.split(" ");
-      if (parts.length < 3) continue;
-
-      const path = parts[2];
-      const dirs = path.split("/").slice(0, -1);
-
-      let currentPath = "";
-      for (const dir of dirs) {
-        currentPath = currentPath ? `${currentPath}/${dir}` : dir;
-        if (!directories.includes(currentPath)) {
-          directories.push(currentPath);
-        }
-      }
-    }
-  } catch (e) {
-    console.error(e);
-  }
-  return directories;
 }
