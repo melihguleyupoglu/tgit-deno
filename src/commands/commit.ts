@@ -105,3 +105,25 @@ function createTree(stagingAreaEntries: StagingAreaEntry[]): GroupedEntries {
   }
   return grouped;
 }
+async function createCommit(
+  stagingAreaEntries: StagingAreaEntry[],
+  author: string,
+  message: string,
+  parentCommit?: string
+): Promise<Commit> {
+  const treeGrouped = createTree(stagingAreaEntries);
+  const treeContent = JSON.stringify(treeGrouped);
+  const treeHash = await createBlob(treeContent);
+
+  const date = Date.now();
+
+  const commit: Commit = {
+    tree: treeHash,
+    author: author,
+    message: message,
+    parent: parentCommit,
+    date: date,
+  };
+
+  return commit;
+}
