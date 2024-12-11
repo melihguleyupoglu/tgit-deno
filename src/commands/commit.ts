@@ -127,3 +127,10 @@ async function createCommit(
 
   return commit;
 }
+
+async function createBlob(content: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(content);
+  const hash = await crypto.subtle.digest("SHA-1", data);
+  return new TextDecoder().decode(new Uint8Array(hash));
+}
