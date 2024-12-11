@@ -27,3 +27,29 @@ function isIndexEmpty(): boolean {
     throw e;
   }
 }
+
+async function readIndexEntries(): Promise<StagingAreaEntry[]> {
+  try {
+    const indexEntries: StagingAreaEntry[] = [];
+    const indexContent = await Deno.readTextFile(indexPath);
+    const lines = indexContent.split("\n");
+
+    for (const line of lines) {
+      const parts = line.split(" ");
+      if (parts.length !== 3) {
+        console.error(`Invalid line format: ${line}`);
+        continue;
+      }
+      const indexEntry: StagingAreaEntry = {
+        permission: parts[0],
+        blob: parts[1],
+        path: parts[2],
+      };
+      indexEntries.push(indexEntry);
+    }
+    return indexEntries;
+  } catch (e) {
+    console.error("Error reading index file:", e);
+    return [];
+  }
+}
