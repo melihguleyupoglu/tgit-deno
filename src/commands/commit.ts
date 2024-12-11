@@ -11,6 +11,14 @@ interface GroupedEntries {
   directories: { [key: string]: GroupedEntries };
 }
 
+interface Commit {
+  tree: string;
+  author: string;
+  message: string;
+  parent?: string;
+  date: number;
+}
+
 export async function commit() {
   if (isIndexEmpty()) {
     console.error("No changes to commit.");
