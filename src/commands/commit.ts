@@ -68,3 +68,44 @@ async function readIndexEntries(): Promise<StagingAreaEntry[]> {
 //     const entry = `${permission} ${blob}`;
 //   }
 // }
+
+function groupEntriesByDirectory(
+  stagingAreaEntries: StagingAreaEntry[]
+): GroupedEntries {
+  const grouped: GroupedEntries = {
+    files: [],
+    directories: {},
+  };
+
+  for (const entry of stagingAreaEntries) {
+    const pathParts = entry.path.split("/");
+
+    if (pathParts.length === 1) {
+      grouped.files.push(entry);
+    } else {
+      const dir = pathParts[0];
+      const remainingPath = pathParts.slice(1).join("/");
+
+      if (!grouped.directories[dir]) {
+        grouped.directories[dir] = {
+          files: [],
+          directories: {},
+        };
+      }
+
+      const subEntry: StagingAreaEntry = {
+        permission: entry.permission,
+        blob: entry.blob,
+        path: remainingPath,
+      };
+      const subGrouped = groupEntriesByDirectory([subEntry]);
+
+      grouped.directories[dir].files.push(...subGrouped.files);
+      grouped.directories[dir].directories = {
+        ...grouped.directories[dir].directories,
+        ...subGrouped.directories,
+      };
+    }
+  }
+  return grouped;
+}
