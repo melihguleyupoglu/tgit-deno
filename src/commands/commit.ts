@@ -24,6 +24,13 @@ export async function commit() {
     console.error("No changes to commit.");
     return;
   }
+
+  const indexEntries = await readIndexEntries();
+  const author = "Melih <melih@example.com";
+  const message = "Initial commit";
+
+  const commit = await createCommit(indexEntries, author, message);
+  console.log("Commit created:", commit);
 }
 
 function isIndexEmpty(): boolean {
