@@ -26,10 +26,14 @@ export async function commit() {
   }
 
   const indexEntries = await readIndexEntries();
-  const author = "Melih <melih@example.com";
+  const author = "Melih <melih@example.com>";
   const message = "Initial commit";
 
-  const commit = await createCommit(indexEntries, author, message);
+  const { commit, treeHash } = await createCommit(
+    indexEntries,
+    author,
+    message
+  );
   console.log("Commit created:", commit);
 }
 
@@ -52,7 +56,7 @@ async function readIndexEntries(): Promise<StagingAreaEntry[]> {
   try {
     const indexEntries: StagingAreaEntry[] = [];
     const indexContent = await Deno.readTextFile(indexPath);
-    const lines = indexContent.split("\n");
+    const lines = indexContent.split("\n").filter((line) => line.trim() !== "");
 
     for (const line of lines) {
       const parts = line.split(" ");
@@ -117,9 +121,11 @@ async function createCommit(
   author: string,
   message: string,
   parentCommit?: string
-): Promise<Commit> {
+): Promise<{ commit: Commit; treeHash: string }> {
   const treeGrouped = createTree(stagingAreaEntries);
+  console.log(treeGrouped);
   const treeContent = JSON.stringify(treeGrouped);
+  console.log(treeContent);
   const treeHash = await createBlob(treeContent);
 
   const date = Date.now();
@@ -132,7 +138,7 @@ async function createCommit(
     date: date,
   };
 
-  return commit;
+  return { commit, treeHash };
 }
 
 async function createBlob(content: string): Promise<string> {

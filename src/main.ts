@@ -8,6 +8,7 @@ import {
   ensureConfigFileExists,
   readConfigFile,
 } from "./config/configUtils.ts";
+import { commit } from "./commands/commit.ts";
 
 const program = new Denomander({
   app_name: "Tgit",
@@ -73,5 +74,9 @@ program
       throw new Error("Please provide a valid option: --set, --get, or --list");
     }
   });
+
+program.command("commit", "Commits the content on staging area").action(() => {
+  commit();
+});
 
 program.parse(Deno.args);
