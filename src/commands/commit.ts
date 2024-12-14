@@ -6,9 +6,11 @@ interface StagingAreaEntry {
   path: string;
 }
 
-interface GroupedEntries {
-  files: StagingAreaEntry[];
-  directories: { [key: string]: GroupedEntries };
+interface TreeEntry {
+  permission: string;
+  type: "blob" | "tree";
+  name: string;
+  hash: string;
 }
 
 interface Commit {
@@ -17,6 +19,13 @@ interface Commit {
   message: string;
   parent?: string;
   date: number;
+}
+
+interface HashTable {
+  [key: string]: {
+    files: { permission: string; blob: string; name: string }[];
+    directories: string[];
+  };
 }
 
 export async function commit() {
@@ -35,6 +44,7 @@ export async function commit() {
     message
   );
   console.log("Commit created:", commit);
+  console.log("Tree hash:", treeHash);
 }
 
 function isIndexEmpty(): boolean {
@@ -78,54 +88,97 @@ async function readIndexEntries(): Promise<StagingAreaEntry[]> {
   }
 }
 
-function createTree(stagingAreaEntries: StagingAreaEntry[]): GroupedEntries {
-  const grouped: GroupedEntries = {
-    files: [],
-    directories: {},
-  };
+async function createTree(
+  stagingAreaEntries: StagingAreaEntry[]
+): Promise<TreeEntry[]> {
+  const hashTable: HashTable = {};
 
+  // 1. HashTable'i oluştur
   for (const entry of stagingAreaEntries) {
     const pathParts = entry.path.split("/");
+    const fileName = pathParts.pop()!;
+    const dirPath = pathParts.join("/");
 
-    if (pathParts.length === 1) {
-      grouped.files.push(entry);
-    } else {
-      const dir = pathParts[0];
-      const remainingPath = pathParts.slice(1).join("/");
+    // Dizin oluştur
+    if (!hashTable[dirPath]) {
+      hashTable[dirPath] = { files: [], directories: [] };
+    }
 
-      if (!grouped.directories[dir]) {
-        grouped.directories[dir] = {
-          files: [],
-          directories: {},
-        };
+    // Dosyayı ekle
+    hashTable[dirPath].files.push({
+      permission: entry.permission,
+      blob: entry.blob,
+      name: fileName,
+    });
+
+    // Alt dizinleri oluştur
+    for (let i = 1; i <= pathParts.length; i++) {
+      const subDirPath = pathParts.slice(0, i).join("/");
+      if (!hashTable[subDirPath]) {
+        hashTable[subDirPath] = { files: [], directories: [] };
       }
-
-      const subEntry: StagingAreaEntry = {
-        permission: entry.permission,
-        blob: entry.blob,
-        path: remainingPath,
-      };
-      const subGrouped = createTree([subEntry]);
-
-      grouped.directories[dir].files.push(...subGrouped.files);
-      grouped.directories[dir].directories = {
-        ...grouped.directories[dir].directories,
-        ...subGrouped.directories,
-      };
+      const nextDir = pathParts[i];
+      if (nextDir && !hashTable[subDirPath].directories.includes(nextDir)) {
+        hashTable[subDirPath].directories.push(nextDir);
+      }
     }
   }
-  return grouped;
+
+  // 2. Rekürsif Tree oluştur
+  async function buildTree(dirPath: string): Promise<TreeEntry[]> {
+    const entries: TreeEntry[] = [];
+
+    // Dosyalar için TreeEntry oluştur
+    for (const file of hashTable[dirPath]?.files || []) {
+      entries.push({
+        permission: file.permission,
+        type: "blob",
+        name: file.name,
+        hash: file.blob,
+      });
+    }
+
+    // Dizinler için rekürsif TreeEntry oluştur
+    for (const subDir of hashTable[dirPath]?.directories || []) {
+      const subDirPath = dirPath ? `${dirPath}/${subDir}` : subDir;
+      const subTree = await buildTree(subDirPath);
+
+      const treeContent = subTree
+        .map(
+          (entry) =>
+            `${entry.permission} ${entry.type} ${entry.hash} ${entry.name}\n`
+        )
+        .join("");
+      const treeHash = await createBlob(treeContent);
+
+      entries.push({
+        permission: "040000", // Dizin modu
+        type: "tree",
+        name: subDir,
+        hash: treeHash,
+      });
+    }
+
+    return entries;
+  }
+
+  // Root için Tree oluştur
+  return buildTree("");
 }
+
 async function createCommit(
   stagingAreaEntries: StagingAreaEntry[],
   author: string,
   message: string,
   parentCommit?: string
 ): Promise<{ commit: Commit; treeHash: string }> {
-  const treeGrouped = createTree(stagingAreaEntries);
-  console.log(treeGrouped);
-  const treeContent = JSON.stringify(treeGrouped);
-  console.log(treeContent);
+  const treeGrouped = await createTree(stagingAreaEntries);
+
+  const treeContent = treeGrouped
+    .map(
+      (entry) => `${entry.permission} ${entry.type} ${entry.hash} ${entry.name}`
+    )
+    .join("\n");
   const treeHash = await createBlob(treeContent);
 
   const date = Date.now();
@@ -144,6 +197,8 @@ async function createCommit(
 async function createBlob(content: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(content);
-  const hash = await crypto.subtle.digest("SHA-1", data);
-  return new TextDecoder().decode(new Uint8Array(hash));
+  const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
