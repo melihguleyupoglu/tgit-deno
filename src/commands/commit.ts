@@ -65,14 +65,13 @@ async function readIndexEntries(): Promise<StagingAreaEntry[]> {
 
 function createTree(stageAreaEntries: StagingAreaEntry[]): TreeView {
   const tree: TreeView = {};
+  tree["root"] = { files: [], directories: [] };
+
   try {
     for (const entry of stageAreaEntries) {
       const path = entry.path;
       const pathParts = path.split("/");
       if (pathParts.length === 1) {
-        if (!tree["root"]) {
-          tree["root"] = { files: [], directories: [] };
-        }
         tree["root"].files.push(entry);
         continue;
       }
@@ -80,6 +79,10 @@ function createTree(stageAreaEntries: StagingAreaEntry[]): TreeView {
         if (i === pathParts.length - 1) {
           tree[pathParts[i - 1]].files.push(entry);
           continue;
+        }
+        if (i === 0) {
+          if (!tree["root"].directories.includes(pathParts[i]))
+            tree["root"].directories.push(pathParts[i]);
         }
         if (!tree[pathParts[i]]) {
           tree[pathParts[i]] = { files: [], directories: [] };
@@ -94,3 +97,5 @@ function createTree(stageAreaEntries: StagingAreaEntry[]): TreeView {
   }
   return tree;
 }
+
+function buildTree(tree: TreeView): {};
