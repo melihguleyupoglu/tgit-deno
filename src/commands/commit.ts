@@ -28,7 +28,7 @@ export async function commit() {
   }
 
   const indexEntries = await readIndexEntries();
-  console.log(createTree(indexEntries));
+  console.log(await buildTree(createTree(indexEntries)));
 }
 function isIndexEmpty(): boolean {
   try {
@@ -106,12 +106,34 @@ function createTree(stageAreaEntries: StagingAreaEntry[]): TreeView {
   return tree;
 }
 
-function buildTree(tree: TreeView): string {}
+async function buildTree(tree: TreeView): Promise<string> {
+  const encoder = new TextEncoder();
+  let fileHash = "";
+  let treeHash = "";
+  for (const dir of tree["root"].directories) {
+    if (tree[dir].directories.length === 0) {
+      for (const file of tree[dir].files) {
+        fileHash = fileHash.concat(
+          file.fileInfo + " blob " + file.path + "\t" + file.blob
+        );
+      }
+      // console.log(fileHash);
+      const data = encoder.encode(fileHash);
+      const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+      treeHash = treeHash.concat(`040000 tree ${dir}\t${hashHex}\n`);
+    }
+  }
+  return treeHash;
+}
 
-function createCommit(
-  treeHash: string,
-  author: string,
-  message: string,
-  date: number,
-  parent?: string
-): Commit;
+// function createCommit(
+//   treeHash: string,
+//   author: string,
+//   message: string,
+//   date: number,
+//   parent?: string
+// ): Commit {}
