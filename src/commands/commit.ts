@@ -114,7 +114,7 @@ async function buildTree(tree: TreeView): Promise<string> {
     if (tree[dir].directories.length === 0) {
       for (const file of tree[dir].files) {
         fileHash = fileHash.concat(
-          file.fileInfo + " blob " + file.path + "\t" + file.blob
+          file.fileInfo + " blob " + file.path + "\0" + file.blob
         );
       }
       // console.log(fileHash);
@@ -124,12 +124,12 @@ async function buildTree(tree: TreeView): Promise<string> {
       const hashHex = hashArray
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
-      treeHash = treeHash.concat(`040000 tree ${dir}\t${hashHex}\n`);
+      treeHash = treeHash.concat(`040000 tree ${dir}\0${hashHex}\n`);
     }
   }
   for (const file of tree["root"].files) {
     treeHash = treeHash.concat(
-      `${file.fileInfo} blob ${file.path}\t${file.blob}\n`
+      `${file.fileInfo} blob ${file.path}\0${file.blob}\n`
     );
   }
   return treeHash;
