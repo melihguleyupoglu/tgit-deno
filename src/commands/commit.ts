@@ -132,7 +132,13 @@ async function buildTree(tree: TreeView): Promise<string> {
       `${file.fileInfo} blob ${file.path}\0${file.blob}\n`
     );
   }
-  return treeHash;
+  const commitHash = encoder.encode(treeHash);
+  const hashBuffer = await crypto.subtle.digest("SHA-1", commitHash);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return hashHex;
 }
 
 // function createCommit(
