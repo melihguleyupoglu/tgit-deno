@@ -127,6 +127,11 @@ async function buildTree(tree: TreeView): Promise<string> {
       treeHash = treeHash.concat(`040000 tree ${dir}\t${hashHex}\n`);
     }
   }
+  for (const file of tree["root"].files) {
+    treeHash = treeHash.concat(
+      `${file.fileInfo} blob ${file.path}\t${file.blob}\n`
+    );
+  }
   return treeHash;
 }
 
