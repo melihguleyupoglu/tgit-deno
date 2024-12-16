@@ -28,7 +28,12 @@ export async function commit() {
   }
 
   const indexEntries = await readIndexEntries();
-  console.log(await buildTree(createTree(indexEntries)));
+  const tree = createTree(indexEntries);
+  const commitHash = await buildTree(tree);
+  const author = "Melih Guleyupoglu <melihgpl@example.com>";
+  const message = "initial commit";
+  const date = Date.now();
+  console.log(createCommit(commitHash, author, message, date));
 }
 function isIndexEmpty(): boolean {
   try {
@@ -141,10 +146,12 @@ async function buildTree(tree: TreeView): Promise<string> {
   return hashHex;
 }
 
-// function createCommit(
-//   treeHash: string,
-//   author: string,
-//   message: string,
-//   date: number,
-//   parent?: string
-// ): Commit {}
+function createCommit(
+  treeHash: string,
+  author: string,
+  message: string,
+  date: number,
+  parent?: string
+): Commit {
+  return { treeHash: treeHash, author: author, message: message, date: date };
+}
