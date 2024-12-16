@@ -13,6 +13,14 @@ interface TreeView {
   };
 }
 
+interface Commit {
+  treeHash: string;
+  author: string;
+  message: string;
+  parent?: string;
+  date: number;
+}
+
 export async function commit() {
   if (isIndexEmpty()) {
     console.error("No changes to commit.");
@@ -98,4 +106,12 @@ function createTree(stageAreaEntries: StagingAreaEntry[]): TreeView {
   return tree;
 }
 
-function buildTree(tree: TreeView): {};
+function buildTree(tree: TreeView): string {}
+
+function createCommit(
+  treeHash: string,
+  author: string,
+  message: string,
+  date: number,
+  parent?: string
+): Commit;
