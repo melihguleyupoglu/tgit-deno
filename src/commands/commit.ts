@@ -122,7 +122,6 @@ async function buildTree(tree: TreeView): Promise<string> {
           file.fileInfo + " blob " + file.path + "\0" + file.blob
         );
       }
-      // console.log(fileHash);
       const data = encoder.encode(fileHash);
       const hashBuffer = await crypto.subtle.digest("SHA-1", data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -137,6 +136,7 @@ async function buildTree(tree: TreeView): Promise<string> {
       `${file.fileInfo} blob ${file.path}\0${file.blob}\n`
     );
   }
+  console.log(treeHash);
   const commitHash = encoder.encode(treeHash);
   const hashBuffer = await crypto.subtle.digest("SHA-1", commitHash);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
