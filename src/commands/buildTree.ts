@@ -33,10 +33,23 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
     treeHash = treeHash.concat(`040000 tree ${key}\0${hashHex}\n`);
     return treeHash;
   } else {
-    // need to update key on treeHash entry in here
+    for (const file of tree[key].files) {
+      fileHash = fileHash.concat(
+        file.fileInfo + " blob " + file.path + "\0" + file.blob
+      );
+    }
+    treeHash = treeHash + fileHash;
+
     for (const dir of tree[key].directories) {
       treeHash = treeHash + (await buildTree(tree, dir));
     }
+    const data = encoder.encode(treeHash);
+    const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    treeHash = treeHash.concat(`040000 tree ${key}\0${hashHex}\n`);
   }
 
   const commitHash = encoder.encode(treeHash);
