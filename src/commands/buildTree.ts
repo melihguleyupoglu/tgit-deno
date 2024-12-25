@@ -30,7 +30,7 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
     const hashHex = hashArray
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
-    treeHash = treeHash.concat(`040000 tree ${key}\0${hashHex}\n`);
+    treeHash = treeHash.concat(`040000 tree ${key}\0${hashHex}`);
     return treeHash;
   } else {
     for (const file of tree[key].files) {
@@ -38,10 +38,13 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
         file.fileInfo + " blob " + file.path + "\0" + file.blob
       );
     }
-    treeHash = treeHash + fileHash;
 
     for (const dir of tree[key].directories) {
       treeHash = treeHash + (await buildTree(tree, dir));
+    }
+    treeHash = treeHash + fileHash;
+    if (key === "root") {
+      console.log(treeHash);
     }
     const data = encoder.encode(treeHash);
     const hashBuffer = await crypto.subtle.digest("SHA-1", data);
@@ -49,14 +52,7 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
     const hashHex = hashArray
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
-    treeHash = treeHash.concat(`040000 tree ${key}\0${hashHex}\n`);
+    treeHash = `040000 tree ${key}\0${hashHex}\n`;
+    return treeHash;
   }
-
-  const commitHash = encoder.encode(treeHash);
-  const hashBuffer = await crypto.subtle.digest("SHA-1", commitHash);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  return hashHex;
 }

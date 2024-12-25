@@ -115,48 +115,24 @@ function createTree(stageAreaEntries: StagingAreaEntry[]): TreeView {
 
 async function buildTree(tree: TreeView, key: string): Promise<string> {
   const encoder = new TextEncoder();
-  let fileHash = "";
-  let treeHash = "";
-  if (tree[key].directories.length === 0) {
-    if (tree[key].files.length === 0) {
-      return "";
-    }
-    for (const file of tree[key].files) {
-      fileHash = fileHash.concat(
-        file.fileInfo + " blob " + file.path + "\0" + file.blob
-      );
-    }
-    const data = encoder.encode(fileHash);
-    const hashBuffer = await crypto.subtle.digest("SHA-1", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    treeHash = treeHash.concat(`040000 tree ${key}\0${hashHex}`);
-    return treeHash;
-  } else {
-    for (const file of tree[key].files) {
-      fileHash = fileHash.concat(
-        file.fileInfo + " blob " + file.path + "\0" + file.blob
-      );
-    }
+  let treeContent = "";
 
-    for (const dir of tree[key].directories) {
-      treeHash = treeHash + (await buildTree(tree, dir));
-    }
-    treeHash = treeHash + fileHash;
-    if (key === "root") {
-      console.log(treeHash);
-    }
-    const data = encoder.encode(treeHash);
-    const hashBuffer = await crypto.subtle.digest("SHA-1", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    treeHash = `040000 tree ${key}\0${hashHex}\n`;
-    return treeHash;
+  for (const file of tree[key].files) {
+    treeContent += `${file.fileInfo} blob ${file.path}\0${file.blob}`;
   }
+
+  for (const dir of tree[key].directories) {
+    const dirHash = await buildTree(tree, dir);
+    treeContent += `040000 tree ${dir}\0${dirHash}`;
+  }
+
+  // if (key === "root") {
+  //   console.log(treeContent);
+  // }
+  const data = encoder.encode(treeContent);
+  const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 async function hashCommit(
