@@ -1,5 +1,6 @@
 import { indexPath } from "./add.ts";
-
+import process from "node:process";
+import { deflate } from "https://deno.land/x/compress@v0.5.5/mod.ts";
 interface StagingAreaEntry {
   fileInfo: string;
   blob: string;
@@ -34,7 +35,7 @@ export async function commit() {
   const message = "initial commit";
   const date = Date.now();
   const commitHash = await hashCommit(treeHash, author, message, date);
-  console.log(createCommit(commitHash, author, message, date));
+  console.log(createCommit(commitHash));
 }
 
 function isIndexEmpty(): boolean {
@@ -117,8 +118,19 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
   const encoder = new TextEncoder();
   let treeContent = "";
 
+  const currentPath = process.cwd().concat("/.tgit/objects");
+  console.log(currentPath);
+
   for (const file of tree[key].files) {
     treeContent += `${file.fileInfo} blob ${file.path}\0${file.blob}`;
+    const dir = `${currentPath}/${file.blob.slice(0, 2)}`;
+    const filePath = `${dir}/${file.blob.slice(2)}`;
+    const content = await Deno.readTextFile(file.path);
+    const uint8Array = encoder.encode(content);
+    const compressedContent = deflate(uint8Array);
+    console.log(compressedContent);
+    await Deno.mkdir(dir, { recursive: true });
+    await Deno.writeFile(filePath, compressedContent);
   }
 
   for (const dir of tree[key].directories) {
@@ -129,10 +141,17 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
   // if (key === "root") {
   //   console.log(treeContent);
   // }
+
   const data = encoder.encode(treeContent);
   const hashBuffer = await crypto.subtle.digest("SHA-1", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+
+  const treeDirPath = `${currentPath}/${hash.slice(0, 2)}`;
+  const treeFilePath = `${treeDirPath}/${hash.slice(2)}`;
+  await Deno.mkdir(treeDirPath, { recursive: true });
+  await Deno.writeTextFile(treeFilePath, treeContent);
+  return hash;
 }
 
 async function hashCommit(
@@ -155,12 +174,11 @@ async function hashCommit(
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function createCommit(
-  treeHash: string,
-  author: string,
-  message: string,
-  date: number,
-  parent?: string
-): Commit {
-  return { treeHash: treeHash, author: author, message: message, date: date };
+async function createCommit(commitString: string): Promise<string> {
+  const objectsPath = process.cwd().concat("/.tgit/objects");
+  const dir = `${objectsPath}/${commitString.slice(0, 2)}`;
+  const filePath = `${dir}/${commitString.slice(2)}`;
+  await Deno.mkdir(dir, { recursive: true });
+  Deno.writeTextFile(filePath, commitString);
+  return commitString;
 }
