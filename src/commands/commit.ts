@@ -30,13 +30,13 @@ export async function commit() {
   const indexEntries = await readIndexEntries();
   const tree = createTree(indexEntries);
   const treeHash = await buildTree(tree, "root");
-  console.log(treeHash);
-  const commitHash = await hashCommit(treeHash);
   const author = "Melih Guleyupoglu <melihgpl@example.com>";
   const message = "initial commit";
   const date = Date.now();
+  const commitHash = await hashCommit(treeHash, author, message, date);
   console.log(createCommit(commitHash, author, message, date));
 }
+
 function isIndexEmpty(): boolean {
   try {
     const indexContent = Deno.readTextFileSync(indexPath);
@@ -133,7 +133,6 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
     treeHash = treeHash.concat(`040000 tree ${key}\0${hashHex}`);
-    console.log(treeHash);
     return treeHash;
   } else {
     for (const file of tree[key].files) {
@@ -146,6 +145,9 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
       treeHash = treeHash + (await buildTree(tree, dir));
     }
     treeHash = treeHash + fileHash;
+    if (key === "root") {
+      console.log(treeHash);
+    }
     const data = encoder.encode(treeHash);
     const hashBuffer = await crypto.subtle.digest("SHA-1", data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -153,20 +155,28 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
     treeHash = `040000 tree ${key}\0${hashHex}\n`;
-    console.log(treeHash);
     return treeHash;
   }
 }
 
-async function hashCommit(treeHash: string): Promise<string> {
+async function hashCommit(
+  treeHash: string,
+  author: string,
+  message: string,
+  date: number,
+  parent?: string
+): Promise<string> {
   const encoder = new TextEncoder();
-  const commitHash = encoder.encode(treeHash);
-  const hashBuffer = await crypto.subtle.digest("SHA-1", commitHash);
+  const commitContent =
+    `tree ${treeHash}\n` +
+    (parent ? `parent ${parent}\n` : "") +
+    `author ${author} ${Math.floor(date / 1000)} +0000\n` +
+    `committer ${author} ${Math.floor(date / 1000)} +0000\n\n` +
+    `${message}\n`;
+  const data = encoder.encode(commitContent);
+  const hashBuffer = await crypto.subtle.digest("SHA-1", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  return hashHex;
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 function createCommit(
