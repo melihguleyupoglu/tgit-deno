@@ -34,8 +34,8 @@ export async function commit() {
   const author = "Melih Guleyupoglu <melihgpl@example.com>";
   const message = "initial commit";
   const date = Date.now();
-  const commitHash = await hashCommit(treeHash, author, message, date);
-  console.log(createCommit(commitHash));
+  const commit = await hashCommit(treeHash, author, message, date);
+  console.log(createCommit(commit.hash, commit.commitContent));
 }
 
 function isIndexEmpty(): boolean {
@@ -160,7 +160,7 @@ async function hashCommit(
   message: string,
   date: number,
   parent?: string
-): Promise<string> {
+): Promise<{ hash: string; commitContent: string }> {
   const encoder = new TextEncoder();
   const commitContent =
     `tree ${treeHash}\n` +
@@ -171,14 +171,24 @@ async function hashCommit(
   const data = encoder.encode(commitContent);
   const hashBuffer = await crypto.subtle.digest("SHA-1", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return {
+    hash: hashArray.map((b) => b.toString(16).padStart(2, "0")).join(""),
+    commitContent: commitContent,
+  };
 }
 
-async function createCommit(commitString: string): Promise<string> {
+async function createCommit(
+  commitString: string,
+  commitContent: string
+): Promise<string> {
+  const encoder = new TextEncoder();
+
   const objectsPath = process.cwd().concat("/.tgit/objects");
   const dir = `${objectsPath}/${commitString.slice(0, 2)}`;
   const filePath = `${dir}/${commitString.slice(2)}`;
   await Deno.mkdir(dir, { recursive: true });
-  Deno.writeTextFile(filePath, commitString);
+  const uint8Array = encoder.encode(commitContent);
+  const compressedContent = deflate(uint8Array);
+  Deno.writeFile(filePath, compressedContent);
   return commitString;
 }
