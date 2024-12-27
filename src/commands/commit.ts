@@ -192,3 +192,31 @@ async function createCommit(
   Deno.writeFile(filePath, compressedContent);
   return commitString;
 }
+
+async function getAuthor(): Promise<string> {
+  const configPath = ".tgit/config";
+
+  try {
+    const configContent = await Deno.readTextFile(configPath);
+    const lines = configContent.split("\n");
+    let author = "";
+    let mail = "";
+    for (const line of lines) {
+      if (line.trim().startsWith("author")) {
+        author = line.split("=")[1].trim();
+      } else if (line.trim().startsWith("mail")) {
+        mail = line.split("=")[1].trim();
+      }
+    }
+    if (author && mail) {
+      return `${author} <${mail}>`;
+    } else {
+      throw new Error(
+        "Config file does not contain required author or mail fields."
+      );
+    }
+  } catch (error) {
+    console.error("Error reading config file:", error);
+    throw error;
+  }
+}
