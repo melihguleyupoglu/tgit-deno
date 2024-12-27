@@ -38,8 +38,17 @@ export default async function rm(
 }
 
 async function removeFileFromStaging(lineNumber: number, lines: string[]) {
-  lines.splice(lineNumber, 1);
-  await Deno.writeTextFile(indexPath, lines.join("\n"));
+  try {
+    const removedLine = lines.splice(lineNumber, 1);
+    const file = removedLine[0].split(" ")[2];
+    console.log(file);
+    if (file.length > 0) {
+      console.log(`${file} removed from staging area`);
+    }
+    await Deno.writeTextFile(indexPath, lines.join("\n"));
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function checkEntryOnIndex(
