@@ -20,6 +20,7 @@ Deno.test("remove command - file removal", async () => {
   const consoleSpy = { messages: [] as string[] };
   console.log = (message: string) => consoleSpy.messages.push(message);
   try {
+    cleanupTgitDir();
     init();
     await Deno.writeTextFile("hello_world.txt", "Hello world\n");
     await add("hello_world.txt");
@@ -31,5 +32,32 @@ Deno.test("remove command - file removal", async () => {
     console.log = originalConsoleLog;
     cleanupTgitDir();
     await Deno.remove("hello_world.txt");
+  }
+});
+
+Deno.test("remove command - directory removal", async () => {
+  const originalConsoleLog = console.log;
+  const consoleSpy = { messages: [] as string[] };
+  console.log = (message: string) => consoleSpy.messages.push(message);
+  try {
+    cleanupTgitDir();
+    init();
+    Deno.mkdir("new_dir");
+    Deno.writeTextFile("new_dir/hello_world.txt", "Hello world!\n");
+    Deno.writeTextFile("new_dir/hello_moon.txt", "Hello Moon!\n");
+    await add("new_dir");
+    await rm("new_dir", true);
+    expect(consoleSpy.messages).toContain(
+      "new_dir/hello_world.txt removed from staging area"
+    );
+    expect(consoleSpy.messages).toContain(
+      "new_dir/hello_moon.txt removed from staging area"
+    );
+  } catch (e) {
+    throw e;
+  } finally {
+    console.log = originalConsoleLog;
+    cleanupTgitDir();
+    await Deno.remove("new_dir", { recursive: true });
   }
 });
