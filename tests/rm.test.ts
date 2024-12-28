@@ -15,6 +15,36 @@ Deno.test(
   }
 );
 
+Deno.test(
+  "remove command - should throw error if file or directory not found",
+  async () => {
+    try {
+      init();
+      await expect(rm("hello_world.txt")).rejects.toThrow(
+        "File or directory: hello_world.txt does not exist."
+      );
+    } finally {
+      cleanupTgitDir();
+    }
+  }
+);
+
+Deno.test(
+  "remove command - should throw error if file is not found in staging area",
+  async () => {
+    try {
+      init();
+      Deno.writeTextFile("hello_world.txt", "hello world!");
+      await expect(rm("hello_world.txt")).rejects.toThrow(
+        "hello_world.txt is not found in staging area"
+      );
+    } finally {
+      await Deno.remove("hello_world.txt");
+      cleanupTgitDir();
+    }
+  }
+);
+
 Deno.test("remove command - file removal", async () => {
   const originalConsoleLog = console.log;
   const consoleSpy = { messages: [] as string[] };

@@ -16,6 +16,8 @@ export default async function rm(
     const { exists, lineNumber } = checkEntryOnIndex(lines, relativePath);
     if (exists && lineNumber !== null) {
       removeFileFromStaging(lineNumber, lines);
+    } else {
+      throw new Error(`${relativePath} is not found in staging area.`);
     }
   }
   if (fileInfo.isDirectory) {
