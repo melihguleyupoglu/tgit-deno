@@ -31,7 +31,7 @@ export async function commit() {
   const indexEntries = await readIndexEntries();
   const tree = createTree(indexEntries);
   const treeHash = await buildTree(tree, "root");
-  const author = "Melih Guleyupoglu <melihgpl@example.com>";
+  const author = await getAuthor();
   const message = "initial commit";
   const date = Date.now();
   const commit = await hashCommit(treeHash, author, message, date);
@@ -138,10 +138,6 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
     treeContent += `040000 tree ${dir}\0${dirHash}`;
   }
 
-  // if (key === "root") {
-  //   console.log(treeContent);
-  // }
-
   const data = encoder.encode(treeContent);
   const hashBuffer = await crypto.subtle.digest("SHA-1", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -168,6 +164,7 @@ async function hashCommit(
     `author ${author} ${Math.floor(date / 1000)} +0000\n` +
     `committer ${author} ${Math.floor(date / 1000)} +0000\n\n` +
     `${message}\n`;
+  console.log(commitContent);
   const data = encoder.encode(commitContent);
   const hashBuffer = await crypto.subtle.digest("SHA-1", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
