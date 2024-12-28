@@ -75,8 +75,17 @@ program
     }
   });
 
-program.command("commit", "Commits the content on staging area").action(() => {
-  commit();
-});
+program
+  .command("commit", "Commits the content on staging area")
+  .option("-m --message", "Set a message for commit object")
+  .action(() => {
+    if (program.message) {
+      commit(program.message);
+    } else {
+      throw new Error(
+        "Invalid message format. Use -m or --message option. use: --message: example message"
+      );
+    }
+  });
 
 program.parse(Deno.args);

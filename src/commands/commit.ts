@@ -22,7 +22,7 @@ interface Commit {
   date: number;
 }
 
-export async function commit() {
+export async function commit(message: string) {
   if (isIndexEmpty()) {
     console.error("No changes to commit.");
     return;
@@ -32,7 +32,6 @@ export async function commit() {
   const tree = createTree(indexEntries);
   const treeHash = await buildTree(tree, "root");
   const author = await getAuthor();
-  const message = "initial commit";
   const date = Date.now();
   const commit = await hashCommit(treeHash, author, message, date);
   console.log(createCommit(commit.hash, commit.commitContent));
