@@ -91,3 +91,21 @@ Deno.test("remove command - directory removal", async () => {
     await Deno.remove("new_dir", { recursive: true });
   }
 });
+
+Deno.test(
+  "remove command - should throw error if trying to remove directory with no recursive flag",
+  async () => {
+    try {
+      init();
+      await Deno.mkdir("hello");
+      await Deno.writeTextFile("hello/hello_world.txt", "Hello world!\n");
+      await add("hello");
+      await expect(rm("hello")).rejects.toThrow(
+        "Cannot remove directory: hello. Use --recursive option."
+      );
+    } finally {
+      cleanupTgitDir();
+      Deno.remove("hello", { recursive: true });
+    }
+  }
+);
