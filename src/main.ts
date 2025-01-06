@@ -90,13 +90,22 @@ program
 
 program
   .command("branch", "List, create, or delete branches")
-  .option("-l --list", "List the branches")
-  .option("-d --delete", "Delete a branch")
-  .option("-D --delete --force", "Force delete a branch")
+  .option(
+    "-l --list [type]",
+    "List the branches. Optionally specify 'remote' for remote branches."
+  )
+  .option(
+    "-d --delete <branch> [type]",
+    "Delete a branch. Optionally specify 'force' for force deletion."
+  )
+
   .action(() => {
     if (!program.option) {
       //Create a branch
     } else if (program.list) {
+      if (program.list.type === "remote") {
+        //List the remote branches
+      }
       //Log the branches
     } else if (program.delete) {
       //Remove the branch
