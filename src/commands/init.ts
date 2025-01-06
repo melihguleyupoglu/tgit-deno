@@ -12,6 +12,9 @@ export default function init() {
     mkdirSync(tgitDir);
     mkdirSync(path.join(tgitDir, "objects"));
     mkdirSync(path.join(tgitDir, "refs"));
+    mkdirSync(path.join(tgitDir, "refs/heads"));
+    mkdirSync(path.join(tgitDir, "refs/tags"));
+    mkdirSync(path.join(tgitDir, "refs/remotes"));
 
     writeFileSync(path.join(tgitDir, "index"), "");
     writeFileSync(path.join(tgitDir, "HEAD"), "ref: refs/head/main\n");
