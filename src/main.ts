@@ -88,4 +88,19 @@ program
     }
   });
 
+program
+  .command("branch", "List, create, or delete branches")
+  .option("-l --list", "List the branches")
+  .option("-d --delete", "Delete a branch")
+  .option("-D --delete --force", "Force delete a branch")
+  .action(() => {
+    if (!program.option) {
+      //Create a branch
+    } else if (program.list) {
+      //Log the branches
+    } else if (program.delete) {
+      //Remove the branch
+    }
+  });
+
 program.parse(Deno.args);
