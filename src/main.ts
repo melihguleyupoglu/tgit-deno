@@ -103,4 +103,15 @@ program
     }
   });
 
+program
+  .command("switch", "Switch to a specified branch")
+  .option("-b --branch", "branch to be switched to")
+  .action(() => {
+    if (program.branch) {
+      //switch to branch
+    } else {
+      console.log("Please specifiy the branch to switch");
+    }
+  });
+
 program.parse(Deno.args);
