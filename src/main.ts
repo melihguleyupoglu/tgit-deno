@@ -99,7 +99,7 @@ program
     "List the branches. Optionally specify 'remote' for remote branches."
   )
   .option(
-    "-d --delete <branch> [type]",
+    "-d --delete <branch> ",
     "Delete a branch. Optionally specify 'force' for force deletion."
   )
 
