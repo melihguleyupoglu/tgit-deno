@@ -113,13 +113,20 @@ program
     }
   });
 
-program.command("switch", "Switch to a specified branch").action(() => {
-  if (program.branch) {
-    //switch HEAD to the input branch
-  } else {
-    console.log("Please specifiy the branch to switch");
-  }
-});
+program
+  .command("switch [branch]", "Switch to a specified branch")
+  .action(async (branch: { branch: string }) => {
+    if (branch.branch) {
+      //verify for the heads file on the branch
+      await Deno.writeTextFile(
+        ".tgit/HEAD",
+        `ref: refs/heads/${branch.branch}`
+      );
+      console.log(`Switched to ${branch.branch}`);
+    } else {
+      console.log("Please specifiy the branch to switch");
+    }
+  });
 
 program.parse(Deno.args);
 
