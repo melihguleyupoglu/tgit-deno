@@ -10,6 +10,10 @@ import {
 } from "./config/configUtils.ts";
 import { commit } from "./commands/commit.ts";
 
+interface BranchOptions {
+  list?: string;
+}
+
 const program = new Denomander({
   app_name: "Tgit",
   app_description: "Git implementation with TS",
@@ -91,7 +95,7 @@ program
 program
   .command("branch", "List, create, or delete branches")
   .option(
-    "-l --list [type]",
+    "-l --list",
     "List the branches. Optionally specify 'remote' for remote branches."
   )
   .option(
@@ -99,16 +103,9 @@ program
     "Delete a branch. Optionally specify 'force' for force deletion."
   )
 
-  .action(() => {
-    if (!program.option) {
-      //Create a branch
-    } else if (program.list) {
-      if (program.list.type === "remote") {
-        //List the remote branches
-      }
-      //Log the branches
-    } else if (program.delete) {
-      //Remove the branch
+  .action((options: BranchOptions) => {
+    if (program.list) {
+      listLocalBranches();
     }
   });
 
@@ -117,10 +114,22 @@ program
   .option("-b --branch", "branch to be switched to")
   .action(() => {
     if (program.branch) {
-      //switch to branch
+      //switch HEAD to the input branch
     } else {
       console.log("Please specifiy the branch to switch");
     }
   });
 
 program.parse(Deno.args);
+
+async function listRemoteBranches() {
+  for await (const branch of Deno.readDir(".tgit/refs/remotes")) {
+    console.log(branch.name);
+  }
+}
+
+async function listLocalBranches() {
+  for await (const branch of Deno.readDir(".tgit/refs/heads")) {
+    console.log(branch.name);
+  }
+}
