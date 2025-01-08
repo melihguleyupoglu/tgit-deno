@@ -103,13 +103,13 @@ program
     "Delete a branch. Optionally specify 'force' for force deletion."
   )
 
-  .action(async (branch: string) => {
+  .action(async (branch: { branch: string }) => {
     if (program.list) {
       await listLocalBranches();
     } else if (program.delete) {
       //remove branch
     } else {
-      await createBranch(branch);
+      await createBranch(branch.branch);
     }
   });
 
@@ -138,10 +138,12 @@ async function listLocalBranches() {
   }
 }
 
-async function createBranch(branchName: string) {
-  const currentBranchName = (await Deno.readTextFile(".tgit/HEAD")).split(
-    "/"
-  )[2];
+async function createBranch(branchName: string | undefined) {
+  const decoder = new TextDecoder("utf-8");
+
+  const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
+    .split("/")[2]
+    .trim();
   const currentBranchCommit = await Deno.readTextFile(
     `.tgit/refs/heads/${currentBranchName}`
   );
