@@ -17,7 +17,7 @@ export default function init() {
     mkdirSync(path.join(tgitDir, "refs/remotes"));
 
     writeFileSync(path.join(tgitDir, "index"), "");
-    writeFileSync(path.join(tgitDir, "HEAD"), "ref: refs/head/main\n");
+    writeFileSync(path.join(tgitDir, "HEAD"), "ref: refs/heads/main\n");
     writeFileSync(path.join(tgitDir, "config"), "[core] \n \n[user]");
 
     console.log("Initialized empty tgit repository");
