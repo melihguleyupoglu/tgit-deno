@@ -93,7 +93,7 @@ program
   });
 
 program
-  .command("branch", "List, create, or delete branches")
+  .command("branch [branch]", "List, create, or delete branches")
   .option(
     "-l --list",
     "List the branches. Optionally specify 'remote' for remote branches."
@@ -103,9 +103,13 @@ program
     "Delete a branch. Optionally specify 'force' for force deletion."
   )
 
-  .action((options: BranchOptions) => {
+  .action(async (branch: string) => {
     if (program.list) {
-      listLocalBranches();
+      await listLocalBranches();
+    } else if (program.delete) {
+      //remove branch
+    } else {
+      await createBranch(branch);
     }
   });
 
@@ -132,4 +136,14 @@ async function listLocalBranches() {
   for await (const branch of Deno.readDir(".tgit/refs/heads")) {
     console.log(branch.name);
   }
+}
+
+async function createBranch(branchName: string) {
+  const currentBranchName = (await Deno.readTextFile(".tgit/HEAD")).split(
+    "/"
+  )[2];
+  const currentBranchCommit = await Deno.readTextFile(
+    `.tgit/refs/heads/${currentBranchName}`
+  );
+  Deno.writeTextFile(`.tgit/refs/heads/${branchName}`, currentBranchCommit);
 }
