@@ -115,16 +115,28 @@ program
 
 program
   .command("switch [branch]", "Switch to a specified branch")
-  .action(async (branch: { branch: string }) => {
-    if (branch.branch) {
-      //verify for the heads file on the branch
+  .action(async (branch: { branch?: string }) => {
+    try {
+      if (!branch.branch) {
+        console.log("Please specifiy the branch to switch");
+        return;
+      }
+      const branchPath = `.tgit/refs/heads/${branch.branch}`;
+      await Deno.stat(branchPath);
+
       await Deno.writeTextFile(
         ".tgit/HEAD",
         `ref: refs/heads/${branch.branch}`
       );
-      console.log(`Switched to ${branch.branch}`);
-    } else {
-      console.log("Please specifiy the branch to switch");
+      console.log(`Switched to branch ${branch.branch}`);
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) {
+        console.error(
+          `No branch named ${branch.branch}. Switch operation failed.`
+        );
+      } else {
+        console.error("An unexpected error occured:", error);
+      }
     }
   });
 
