@@ -171,9 +171,34 @@ async function removeBranch(branchName: string) {
     if (file.name === branchName) {
       try {
         await Deno.remove(`.tgit/refs/heads/${file.name}`);
+        if (
+          (await Deno.readTextFile(".tgit/HEAD")) ===
+          `ref: refs/heads/${branchName}`
+        ) {
+          const defaultBranch = getDefaultBranch();
+          if (defaultBranch !== undefined) {
+            Deno.writeTextFile(
+              ".tgit/HEAD",
+              `ref: refs/heads/${defaultBranch.replace(/['"]/g, "")}`
+            );
+          }
+        }
       } catch (e) {
         throw e;
       }
     }
   }
+}
+
+function getDefaultBranch(): string | undefined {
+  const configContent = readConfigFile();
+  const lines = configContent.split("\n");
+  for (const line of lines) {
+    console.log(line);
+    if (line.startsWith("\tdefaultBranch")) {
+      return line.split("=")[1].trim();
+    }
+  }
+  console.log("Please specify default branch in config file.");
+  return undefined;
 }
