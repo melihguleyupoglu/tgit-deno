@@ -18,7 +18,10 @@ export default function init() {
 
     writeFileSync(path.join(tgitDir, "index"), "");
     writeFileSync(path.join(tgitDir, "HEAD"), "ref: refs/heads/main\n");
-    writeFileSync(path.join(tgitDir, "config"), "[core] \n \n[user]");
+    writeFileSync(
+      path.join(tgitDir, "config"),
+      "{\n\tdefaultBranch:'main'\n\tuserName:''\n\tuserMail:''\n}"
+    );
     writeFileSync(path.join(tgitDir, "refs/heads/main"), "");
 
     console.log("Initialized empty tgit repository");
