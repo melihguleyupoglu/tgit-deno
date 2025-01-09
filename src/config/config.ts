@@ -3,10 +3,13 @@ import { writeConfigFile } from "./configUtils.ts";
 export default {
   set(key: string, value: string, configContent: string) {
     const lines = configContent.split("\n");
-    const existingIndex = lines.findIndex((line) => line.startsWith(`${key}=`));
+    const existingIndex = lines.findIndex((line) =>
+      line.startsWith(`\t${key}=`)
+    );
     if (existingIndex >= 0) {
-      lines[existingIndex] = `${key} = ${value}`;
+      lines[existingIndex] = `\t${key}='${value}'`;
     } else {
+      console.log(key, value);
       console.log(`Invalid config`);
     }
     writeConfigFile(lines);
