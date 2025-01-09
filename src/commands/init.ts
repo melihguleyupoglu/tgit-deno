@@ -20,7 +20,7 @@ export default function init() {
     writeFileSync(path.join(tgitDir, "HEAD"), "ref: refs/heads/main\n");
     writeFileSync(
       path.join(tgitDir, "config"),
-      "{\n\tdefaultBranch:'main'\n\tuserName:''\n\tuserMail:''\n}"
+      "{\n\tdefaultBranch:'main'\n\tusername=''\n\tuserMail:''\n}"
     );
     writeFileSync(path.join(tgitDir, "refs/heads/main"), "");
 
