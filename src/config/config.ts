@@ -7,7 +7,7 @@ export default {
     if (existingIndex >= 0) {
       lines[existingIndex] = `${key} = ${value}`;
     } else {
-      lines.push(`${key} = ${value}`);
+      console.log(`Invalid config`);
     }
     writeConfigFile(lines);
   },
