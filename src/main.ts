@@ -145,4 +145,6 @@ program
     }
   });
 
+program.command("status", "Show the working tree status").action(() => {});
+
 program.parse(Deno.args);
