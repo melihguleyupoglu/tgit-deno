@@ -34,7 +34,9 @@ export async function commit(message: string) {
   const author = await getAuthor();
   const date = Date.now();
   const commit = await hashCommit(treeHash, author, message, date);
-  console.log(createCommit(commit.hash, commit.commitContent));
+  await updateRefWithCommit(
+    await createCommit(commit.hash, commit.commitContent)
+  );
 }
 
 function isIndexEmpty(): boolean {
@@ -212,5 +214,18 @@ async function getAuthor(): Promise<string> {
   } catch (error) {
     console.error("Error reading config file:", error);
     throw error;
+  }
+}
+
+async function updateRefWithCommit(commitHash: string): Promise<boolean> {
+  const currentBranch = (await Deno.readTextFile(".tgit/HEAD"))
+    .split("/")[2]
+    .trim();
+  if (currentBranch) {
+    await Deno.writeTextFile(`.tgit/refs/heads/${currentBranch}`, commitHash);
+    return true;
+  } else {
+    console.log("Couldn't fetch the current branch info");
+    return false;
   }
 }
