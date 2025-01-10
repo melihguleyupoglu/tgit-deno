@@ -118,7 +118,6 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
   let treeContent = "";
 
   const currentPath = process.cwd().concat("/.tgit/objects");
-  console.log(currentPath);
 
   for (const file of tree[key].files) {
     treeContent += `${file.fileInfo} blob ${file.path}\0${file.blob}`;
@@ -127,7 +126,6 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
     const content = await Deno.readTextFile(file.path);
     const uint8Array = encoder.encode(content);
     const compressedContent = deflate(uint8Array);
-    console.log(compressedContent);
     await Deno.mkdir(dir, { recursive: true });
     await Deno.writeFile(filePath, compressedContent);
   }
@@ -198,9 +196,9 @@ async function getAuthor(): Promise<string> {
     let author = "";
     let mail = "";
     for (const line of lines) {
-      if (line.trim().startsWith("author")) {
+      if (line.trim().startsWith("username")) {
         author = line.split("=")[1].trim();
-      } else if (line.trim().startsWith("mail")) {
+      } else if (line.trim().startsWith("userMail")) {
         mail = line.split("=")[1].trim();
       }
     }
