@@ -199,6 +199,7 @@ function getDefaultBranch(): string | undefined {
       return line.split("=")[1].trim();
     }
   }
+  //TODO tell user how-to set default branch
   console.log("Please specify default branch in config file.");
   return undefined;
 }
