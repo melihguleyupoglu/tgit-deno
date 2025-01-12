@@ -75,7 +75,8 @@ async function processEntry(relativePath: string): Promise<void> {
 async function createIndexEntry(relativePath: string): Promise<string> {
   const permissions = getFilePermissions(relativePath);
   const hash = await computeFileHash(relativePath);
-  const entry = `${permissions} ${hash} ${relativePath}`;
+  const mtime = (await Deno.lstat(relativePath)).mtime?.valueOf() ?? 0;
+  const entry = `${permissions} ${hash} ${relativePath} ${mtime}`;
   return entry;
 }
 
