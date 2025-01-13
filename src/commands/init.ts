@@ -1,6 +1,6 @@
 import * as path from "@std/path";
 import process from "node:process";
-import { writeFileSync, mkdirSync, existsSync, writeFile } from "node:fs";
+import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 
 export default function init() {
   const tgitDir = path.join(process.cwd(), ".tgit");
