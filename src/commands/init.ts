@@ -1,6 +1,6 @@
 import * as path from "@std/path";
 import process from "node:process";
-import { writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { writeFileSync, mkdirSync, existsSync, writeFile } from "node:fs";
 
 export default function init() {
   const tgitDir = path.join(process.cwd(), ".tgit");
@@ -18,6 +18,7 @@ export default function init() {
 
     writeFileSync(path.join(tgitDir, "index"), "");
     writeFileSync(path.join(tgitDir, "HEAD"), "ref: refs/heads/main\n");
+    writeFileSync(path.join(tgitDir, ".tgitignore"), "");
     writeFileSync(
       path.join(tgitDir, "config"),
       "{\n\tdefaultBranch='main'\n\tusername=''\n\tuserMail=''\n}"
