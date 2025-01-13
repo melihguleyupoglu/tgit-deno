@@ -14,6 +14,7 @@ import {
   removeBranch,
   createBranch,
 } from "./utils/branchUtils.ts";
+import status from "./commands/status.ts";
 
 interface BranchOptions {
   list?: string;
@@ -145,6 +146,8 @@ program
     }
   });
 
-program.command("status", "Show the working tree status").action(() => {});
+program.command("status", "Show the working tree status").action(() => {
+  status();
+});
 
 program.parse(Deno.args);
