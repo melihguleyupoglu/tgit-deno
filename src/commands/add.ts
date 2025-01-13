@@ -39,15 +39,15 @@ async function updateIndex(
 function checkIndexForDuplicateEntry(
   entryPath: string,
   lines: string[]
-): { exists: boolean; lineIndex: number | null } {
+): { exists: boolean; lineIndex: number | null; indexMTime: string | null } {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const parts = line.split(" ");
-    if (parts.length === 3 && parts[2] === entryPath) {
-      return { exists: true, lineIndex: i };
+    if (parts.length === 4 && parts[2] === entryPath) {
+      return { exists: true, lineIndex: i, indexMTime: parts[3] };
     }
   }
-  return { exists: false, lineIndex: null };
+  return { exists: false, lineIndex: null, indexMTime: null };
 }
 
 async function processEntry(relativePath: string): Promise<void> {
@@ -55,8 +55,10 @@ async function processEntry(relativePath: string): Promise<void> {
     const entry = await createIndexEntry(relativePath);
     const indexContent = await Deno.readTextFile(indexPath);
     const lines = indexContent.split("\n");
+    const fileSystemMTime =
+      (await Deno.lstat(relativePath)).mtime?.valueOf() ?? 0;
 
-    const { exists, lineIndex } = checkIndexForDuplicateEntry(
+    const { exists, lineIndex, indexMTime } = checkIndexForDuplicateEntry(
       relativePath,
       lines
     );
@@ -64,8 +66,13 @@ async function processEntry(relativePath: string): Promise<void> {
       await writeToIndex(entry);
       console.log(`Added: ${relativePath}`);
     } else {
-      if (lineIndex) await updateIndex(entry, lines, lineIndex);
-      console.log(`Updated: ${relativePath}`);
+      if (lineIndex && fileSystemMTime.toString() !== indexMTime) {
+        console.log(fileSystemMTime, indexMTime);
+        await updateIndex(entry, lines, lineIndex);
+        console.log(`Updated: ${relativePath}`);
+      } else if (lineIndex && fileSystemMTime.toString() === indexMTime) {
+        console.log(`Nothing happened.`);
+      }
     }
   } catch (error) {
     console.log(`Error processing: ${relativePath} - ${error}`);
@@ -154,3 +161,17 @@ export function checkTgitDirectory(): void {
     }
   }
 }
+
+// async function checkIfModified(file: string) {
+//   const mtime = (await Deno.lstat(file)).mtime?.valueOf() ?? 0;
+//   const lines = (await Deno.readTextFile(indexPath)).split("\n");
+//   for (const line of lines) {
+//     if (line[2] === file && line[3] === mtime.toString()) {
+//       return false;
+//     } else if (line[2] === file && line[3] !== mtime.toString()) {
+//       return true;
+//     } else {
+//       continue;
+//     }
+//   }
+// }
