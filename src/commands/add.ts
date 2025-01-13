@@ -75,8 +75,6 @@ async function processEntry(relativePath: string): Promise<void> {
       console.log(fileSystemMTime, indexMTime);
       await updateIndex(entry, lines, lineIndex);
       console.log(`Updated: ${relativePath}`);
-    } else if (lineIndex && fileSystemMTime.toString() === indexMTime) {
-      console.log(`Nothing happened.`);
     }
   } catch (error) {
     console.log(`Error processing: ${relativePath} - ${error}`);
