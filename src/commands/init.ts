@@ -18,7 +18,6 @@ export default function init() {
 
     writeFileSync(path.join(tgitDir, "index"), "");
     writeFileSync(path.join(tgitDir, "HEAD"), "ref: refs/heads/main\n");
-    writeFileSync(path.join(tgitDir, ".tgitignore"), "");
     writeFileSync(
       path.join(tgitDir, "config"),
       "{\n\tdefaultBranch='main'\n\tusername=''\n\tuserMail=''\n}"
