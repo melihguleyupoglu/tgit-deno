@@ -52,7 +52,7 @@ function checkIndexForDuplicateEntry(
 
 async function processEntry(relativePath: string): Promise<void> {
   try {
-    const entry = await createIndexEntry(relativePath);
+    let entry = await createIndexEntry(relativePath);
     const indexContent = await Deno.readTextFile(indexPath);
     const lines = indexContent.split("\n");
     const fileSystemMTime =
@@ -62,17 +62,21 @@ async function processEntry(relativePath: string): Promise<void> {
       relativePath,
       lines
     );
+
+    if (lineIndex && fileSystemMTime.toString() === indexMTime) {
+      console.log(`${relativePath} already in staging area`);
+    }
+    const hash = await computeFileHash(relativePath);
+    entry = entry.replace("hash", hash);
     if (!exists) {
       await writeToIndex(entry);
       console.log(`Added: ${relativePath}`);
-    } else {
-      if (lineIndex && fileSystemMTime.toString() !== indexMTime) {
-        console.log(fileSystemMTime, indexMTime);
-        await updateIndex(entry, lines, lineIndex);
-        console.log(`Updated: ${relativePath}`);
-      } else if (lineIndex && fileSystemMTime.toString() === indexMTime) {
-        console.log(`Nothing happened.`);
-      }
+    } else if (lineIndex && fileSystemMTime.toString() !== indexMTime) {
+      console.log(fileSystemMTime, indexMTime);
+      await updateIndex(entry, lines, lineIndex);
+      console.log(`Updated: ${relativePath}`);
+    } else if (lineIndex && fileSystemMTime.toString() === indexMTime) {
+      console.log(`Nothing happened.`);
     }
   } catch (error) {
     console.log(`Error processing: ${relativePath} - ${error}`);
@@ -81,9 +85,8 @@ async function processEntry(relativePath: string): Promise<void> {
 
 async function createIndexEntry(relativePath: string): Promise<string> {
   const permissions = getFilePermissions(relativePath);
-  const hash = await computeFileHash(relativePath);
   const mtime = (await Deno.lstat(relativePath)).mtime?.valueOf() ?? 0;
-  const entry = `${permissions} ${hash} ${relativePath} ${mtime}`;
+  const entry = `${permissions} hash ${relativePath} ${mtime}`;
   return entry;
 }
 
