@@ -62,7 +62,7 @@ async function readIndexEntries(): Promise<StagingAreaEntry[]> {
 
     for (const line of lines) {
       const parts = line.split(" ");
-      if (parts.length !== 3) {
+      if (parts.length !== 4) {
         console.error(`Invalid line format: ${line}`);
         continue;
       }
