@@ -122,7 +122,7 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
   const currentPath = process.cwd().concat("/.tgit/objects");
 
   for (const file of tree[key].files) {
-    treeContent += `${file.fileInfo} blob ${file.path}\0${file.blob} `;
+    treeContent += `${file.fileInfo} blob ${file.path}\0${file.blob}\n`;
     const dir = `${currentPath}/${file.blob.slice(0, 2)}`;
     const filePath = `${dir}/${file.blob.slice(2)}`;
     const content = await Deno.readTextFile(file.path);

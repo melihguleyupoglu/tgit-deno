@@ -103,7 +103,7 @@ function getFilePermissions(relativePath: string): string {
   }
 }
 
-async function computeFileHash(relativePath: string): Promise<string> {
+export async function computeFileHash(relativePath: string): Promise<string> {
   try {
     const fileContent = await Deno.readFile(relativePath);
     const hashBuffer = await crypto.subtle.digest("SHA-1", fileContent);
