@@ -4,12 +4,29 @@ import { computeFileHash } from "./add.ts";
 const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
   .split("/")[2]
   .trim();
-export default async function status() {
-  const currentPath = Deno.cwd();
+export default async function status(path?: string) {
+  let currentPath = Deno.cwd();
+  if (path) {
+    currentPath = `${currentPath}/${path}`;
+  }
+  console.log(currentPath);
   console.log(`On branch ${currentBranchName}`);
+
   let ignoreContent = [] as string[];
   try {
     for await (const entry of Deno.readDir(currentPath)) {
+      const fullPath = `${currentPath}/${entry.name}`;
+
+      if (entry.isDirectory) {
+        console.log(`Directory found: ${entry.name}`);
+        await status(entry.name);
+      } else {
+        const fileName = entry.name;
+        console.log(`Processing file: ${fileName}`);
+
+        const hash = await computeFileHash(fullPath);
+        await checkForToBeCommitted(fileName, hash);
+      }
       const entryName = entry.name;
       console.log(entryName);
 
@@ -22,7 +39,7 @@ export default async function status() {
       // }
     }
   } catch (error) {
-    console.error(error);
+    console.error("Error:", error);
   }
 }
 
@@ -66,8 +83,11 @@ async function checkForToBeCommitted(
   console.log("Changes to be committed:");
   for (const line of lines) {
     const pathAndBlob = line.split(" ")[2];
+    console.log(pathAndBlob);
     const path = pathAndBlob.split("\0")[0];
+    console.log(path);
     const blob = pathAndBlob.split("\0")[1];
+    console.log(blob);
     console.log(path, blob);
     if (path === fileName && blob !== blobParam) {
       console.log(`modified: ${fileName}`);
