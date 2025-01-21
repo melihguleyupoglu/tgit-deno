@@ -9,41 +9,46 @@ interface Entry {
 const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
   .split("/")[2]
   .trim();
+const entries: Entry[] = await checkCommit();
+
 export default async function status(path?: string) {
   let currentPath = Deno.cwd();
   if (path) {
-    currentPath = `${currentPath}/${path}`;
+    currentPath = `${path}`;
   }
   // console.log(currentPath);
   // console.log(`On branch ${currentBranchName}`);
 
-  let ignoreContent = [] as string[];
+  // let ignoreContent = [] as string[];
   try {
-    const entries: Entry[] = await checkCommit();
-    console.log(entries);
-    // for await (const entry of Deno.readDir(currentPath)) {
-    //   const fullPath = `${currentPath}/${entry.name}`;
-    //   console.log(entry);
-    //   if (entry.isDirectory) {
-    //     console.log(`Directory found: ${entry.name}`);
-    //     await status(entry.name);
-    //   } else {
-    //     const fileName = entry.name;
-    //     console.log(`Processing file: ${fileName}`);
+    for await (const entry of Deno.readDir(currentPath)) {
+      const fullPath = `${currentPath}/${entry.name}`;
+      console.log(fullPath);
+      if (entry.isDirectory) {
+        console.log(`Directory found: ${entry.name}`);
+        await status(fullPath);
+      } else {
+        const fileName = entry.name;
+        console.log(`Processing file: ${fileName}`);
 
-    //     const hash = await computeFileHash(fullPath);
-    //     await checkForToBeCommitted(fileName, hash);
-    //   }
-    //   const entryName = entry.name;
-    //   console.log(entryName);
+        const hash = await computeFileHash(fullPath);
+        for (const entry of entries) {
+          if (entry.path.includes(fileName) && entry.blob !== hash) {
+            console.log(`modified: ${fileName}`);
+          }
+        }
+      }
+      const entryName = entry.name;
+      console.log(entryName);
 
-    // if (fileName in ignoreContent) {
-    //   continue;
-    // } else {
-    //   const hash = await computeFileHash(fileName);
+      // if (fileName in ignoreContent) {
+      //   continue;
+      // } else {
+      //   const hash = await computeFileHash(fileName);
 
-    //   await checkForToBeCommitted(fileName, hash);
-    // }
+      //   await checkForToBeCommitted(fileName, hash);
+      // }
+    }
   } catch (error) {
     console.error("Error:", error);
   }
