@@ -35,6 +35,7 @@ export default async function status(path?: string) {
             entry.path.trim() === relativePath.trim() &&
             entry.blob !== hash
           ) {
+            console.log("Changes to be committed:");
             console.log(`modified: ${fileName}`);
           }
         }
@@ -94,7 +95,6 @@ async function checkCommit(): Promise<Entry[]> {
   );
   const lines = rootContentHashContent.split("\n");
   lines.pop();
-  console.log("Changes to be committed:");
   const entries = [];
   for (const line of lines) {
     const parts = line.split(" ");
