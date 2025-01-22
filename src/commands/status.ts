@@ -6,6 +6,10 @@ interface Entry {
   blob: string;
 }
 
+interface StagingAreaEntry extends Entry {
+  mtime: string;
+}
+
 const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
   .split("/")[2]
   .trim();
@@ -115,4 +119,9 @@ async function checkCommit(): Promise<Entry[]> {
   return entries;
 }
 
-async function checkStagingArea() {}
+async function checkStagingArea(): Promise<StagingAreaEntry[]> {
+  const stagingAreaEntries: StagingAreaEntry[] = [];
+  const stagingAreaContent = await Deno.readTextFile(".tgit/index");
+  const entries = stagingAreaContent.split("\n");
+  return stagingAreaEntries;
+}
