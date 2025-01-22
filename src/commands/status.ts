@@ -25,8 +25,7 @@ export default async function status(path?: string) {
     for await (const entry of Deno.readDir(currentPath)) {
       const fullPath = `${currentPath}/${entry.name}`;
       const relativePath = fullPath.replace(`${tgitPath}/`, "");
-      console.log(relativePath);
-      console.log(fullPath);
+
       if (entry.isDirectory) {
         console.log(`Directory found: ${entry.name}`);
         await status(fullPath);
@@ -35,19 +34,18 @@ export default async function status(path?: string) {
         console.log(`Processing file: ${fileName}`);
 
         const hash = await computeFileHash(fullPath);
+        console.log(fileName, hash);
         for (const entry of entries) {
-          console.log(entry.path, fileName);
           console.log(entry.path.trim(), relativePath.trim(), "?");
           if (
             entry.path.trim() === relativePath.trim() &&
-            entry.blob.trim() !== hash.trim()
+            entry.blob !== hash
           ) {
             console.log(`modified: ${fileName}`);
           }
         }
       }
       const entryName = entry.name;
-      console.log(entryName);
 
       // if (fileName in ignoreContent) {
       //   continue;
