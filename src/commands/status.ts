@@ -9,7 +9,7 @@ interface Entry {
 const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
   .split("/")[2]
   .trim();
-const entries: Entry[] = await checkCommit();
+const commitEntries: Entry[] = await checkCommit();
 
 export default async function status(path?: string) {
   let currentPath = Deno.cwd();
@@ -17,8 +17,6 @@ export default async function status(path?: string) {
   if (path) {
     currentPath = `${path}`;
   }
-  // console.log(currentPath);
-  // console.log(`On branch ${currentBranchName}`);
 
   // let ignoreContent = [] as string[];
   try {
@@ -27,16 +25,12 @@ export default async function status(path?: string) {
       const relativePath = fullPath.replace(`${tgitPath}/`, "");
 
       if (entry.isDirectory) {
-        console.log(`Directory found: ${entry.name}`);
         await status(fullPath);
       } else {
         const fileName = entry.name;
-        console.log(`Processing file: ${fileName}`);
 
         const hash = await computeFileHash(fullPath);
-        console.log(fileName, hash);
-        for (const entry of entries) {
-          console.log(entry.path.trim(), relativePath.trim(), "?");
+        for (const entry of commitEntries) {
           if (
             entry.path.trim() === relativePath.trim() &&
             entry.blob !== hash
@@ -45,7 +39,6 @@ export default async function status(path?: string) {
           }
         }
       }
-      const entryName = entry.name;
 
       // if (fileName in ignoreContent) {
       //   continue;
@@ -100,11 +93,12 @@ async function checkCommit(): Promise<Entry[]> {
     }/${rootContentHash.slice(2)}`
   );
   const lines = rootContentHashContent.split("\n");
+  lines.pop();
   console.log("Changes to be committed:");
   const entries = [];
   for (const line of lines) {
     const parts = line.split(" ");
-    console.log(parts);
+
     if (parts.length < 3) {
       console.error("Invalid line format:", line);
       continue;
@@ -120,3 +114,5 @@ async function checkCommit(): Promise<Entry[]> {
   }
   return entries;
 }
+
+async function checkStagingArea() {}
