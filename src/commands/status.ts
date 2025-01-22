@@ -14,6 +14,7 @@ const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
   .split("/")[2]
   .trim();
 const commitEntries: Entry[] = await checkCommit();
+const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
 
 export default async function status(path?: string) {
   let currentPath = Deno.cwd();
@@ -120,8 +121,13 @@ async function checkCommit(): Promise<Entry[]> {
 }
 
 async function checkStagingArea(): Promise<StagingAreaEntry[]> {
-  const stagingAreaEntries: StagingAreaEntry[] = [];
+  let stagingAreaEntries: StagingAreaEntry[] = [];
   const stagingAreaContent = await Deno.readTextFile(".tgit/index");
   const entries = stagingAreaContent.split("\n");
+  entries.pop();
+  for (const entry of entries) {
+    const [_, blob, path, mtime] = entry.split(" ");
+    stagingAreaEntries.push({ blob: blob, path: path, mtime: mtime });
+  }
   return stagingAreaEntries;
 }
