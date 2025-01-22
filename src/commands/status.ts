@@ -120,11 +120,3 @@ async function checkCommit(): Promise<Entry[]> {
   }
   return entries;
 }
-
-async function checkIfStaged(filePath: string): Promise<void> {}
-
-function getRelativePath(fullPath: string): string {
-  const relativePath = "";
-
-  return relativePath;
-}
