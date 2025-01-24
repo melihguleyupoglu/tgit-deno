@@ -18,6 +18,7 @@ const commitEntries: Entry[] = await checkCommit();
 const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
 export const untrackedEntries: string[] = [];
 export const newEntries: string[] = [];
+const deletedEntriesFromStagingArea: string[] = [];
 
 export default async function status(path?: string) {
   let currentPath = Deno.cwd();
@@ -48,6 +49,7 @@ export default async function status(path?: string) {
           commitEntries.filter((entry) => entry.path === relativePath)
             .length === 0 &&
           stagingAreaEntries.filter((entry) => entry.path === relativePath)
+            .length === 1
         ) {
           newEntries.push(relativePath);
         }
