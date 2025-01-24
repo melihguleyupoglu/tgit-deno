@@ -13,9 +13,11 @@ interface StagingAreaEntry extends Entry {
 const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
   .split("/")[2]
   .trim();
+
 const commitEntries: Entry[] = await checkCommit();
 const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
 export const untrackedEntries: string[] = [];
+export const newEntries: string[] = [];
 
 export default async function status(path?: string) {
   let currentPath = Deno.cwd();
@@ -42,8 +44,13 @@ export default async function status(path?: string) {
             .length === 0
         ) {
           const length = untrackedEntries.push(relativePath);
+        } else if (
+          commitEntries.filter((entry) => entry.path === relativePath)
+            .length === 0 &&
+          stagingAreaEntries.filter((entry) => entry.path === relativePath)
+        ) {
+          newEntries.push(relativePath);
         }
-
         const hash = await computeFileHash(fullPath);
         for (const entry of commitEntries) {
           if (
@@ -64,7 +71,6 @@ export default async function status(path?: string) {
       //   await checkForToBeCommitted(fileName, hash);
       // }
     }
-    // console.log(untrackedEntries);
   } catch (error) {
     console.error("Error:", error);
   }

@@ -14,7 +14,7 @@ import {
   removeBranch,
   createBranch,
 } from "./utils/branchUtils.ts";
-import status, { untrackedEntries } from "./commands/status.ts";
+import status, { newEntries, untrackedEntries } from "./commands/status.ts";
 
 interface BranchOptions {
   list?: string;
@@ -151,6 +151,10 @@ program.command("status", "Show the working tree status").action(async () => {
   if (untrackedEntries.length > 0) {
     console.log("untracked files:");
     console.log(untrackedEntries);
+  }
+  if (newEntries.length > 0) {
+    console.log("new files:");
+    console.log(newEntries);
   }
 });
 
