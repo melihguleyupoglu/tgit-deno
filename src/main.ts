@@ -14,7 +14,7 @@ import {
   removeBranch,
   createBranch,
 } from "./utils/branchUtils.ts";
-import status from "./commands/status.ts";
+import status, { untrackedEntries } from "./commands/status.ts";
 
 interface BranchOptions {
   list?: string;
@@ -146,8 +146,12 @@ program
     }
   });
 
-program.command("status", "Show the working tree status").action(() => {
-  status();
+program.command("status", "Show the working tree status").action(async () => {
+  await status();
+  if (untrackedEntries.length > 0) {
+    console.log("untracked files:");
+    console.log(untrackedEntries);
+  }
 });
 
 program.parse(Deno.args);
