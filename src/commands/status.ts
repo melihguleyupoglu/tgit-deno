@@ -15,6 +15,7 @@ const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
   .trim();
 const commitEntries: Entry[] = await checkCommit();
 const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
+const untrackedEntries: string[] = [];
 
 export default async function status(path?: string) {
   let currentPath = Deno.cwd();
@@ -34,6 +35,16 @@ export default async function status(path?: string) {
       } else {
         const fileName = entry.name;
 
+        if (
+          commitEntries.filter((entry) => entry.path === relativePath)
+            .length === 0 &&
+          stagingAreaEntries.filter((entry) => entry.path === relativePath)
+            .length === 0
+        ) {
+          console.log("untracked file detected.");
+          const length = untrackedEntries.push(relativePath);
+        }
+        console.log(untrackedEntries);
         const hash = await computeFileHash(fullPath);
         for (const entry of commitEntries) {
           if (
