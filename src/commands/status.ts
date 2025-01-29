@@ -18,7 +18,7 @@ const commitEntries: Entry[] = await checkCommit();
 const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
 export const untrackedEntries: string[] = [];
 export const newEntries: string[] = [];
-const deletedEntriesFromStagingArea: string[] = [];
+export const deletedEntriesFromStagingArea: string[] = [];
 
 export default async function status(path?: string) {
   let currentPath = Deno.cwd();
@@ -44,7 +44,7 @@ export default async function status(path?: string) {
           stagingAreaEntries.filter((entry) => entry.path === relativePath)
             .length === 0
         ) {
-          const length = untrackedEntries.push(relativePath);
+          untrackedEntries.push(relativePath);
         } else if (
           commitEntries.filter((entry) => entry.path === relativePath)
             .length === 0 &&
@@ -52,6 +52,13 @@ export default async function status(path?: string) {
             .length === 1
         ) {
           newEntries.push(relativePath);
+        } else if (
+          commitEntries.filter((entry) => entry.path === relativePath)
+            .length === 1 &&
+          stagingAreaEntries.filter((entry) => entry.path === relativePath)
+            .length === 0
+        ) {
+          deletedEntriesFromStagingArea.push(relativePath);
         }
         const hash = await computeFileHash(fullPath);
         for (const entry of commitEntries) {

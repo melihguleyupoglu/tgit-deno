@@ -14,7 +14,11 @@ import {
   removeBranch,
   createBranch,
 } from "./utils/branchUtils.ts";
-import status, { newEntries, untrackedEntries } from "./commands/status.ts";
+import status, {
+  deletedEntriesFromStagingArea,
+  newEntries,
+  untrackedEntries,
+} from "./commands/status.ts";
 
 interface BranchOptions {
   list?: string;
@@ -155,6 +159,10 @@ program.command("status", "Show the working tree status").action(async () => {
   if (newEntries.length > 0) {
     console.log("new files:");
     console.log(newEntries);
+  }
+  if (deletedEntriesFromStagingArea.length > 0) {
+    console.log("deleted files:");
+    console.log(deletedEntriesFromStagingArea);
   }
 });
 

@@ -134,6 +134,7 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
 
   for (const dir of tree[key].directories) {
     const dirHash = await buildTree(tree, dir);
+    // if treeContent is not null make sure line has a starting whitespace
     treeContent += `040000 tree ${dir}\0${dirHash}`;
   }
 
