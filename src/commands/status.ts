@@ -10,17 +10,17 @@ interface StagingAreaEntry extends Entry {
   mtime: string;
 }
 
-const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
-  .split("/")[2]
-  .trim();
-
-const commitEntries: Entry[] = await checkCommit();
-const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
 export const untrackedEntries: string[] = [];
 export const newEntries: string[] = [];
 export const deletedEntriesFromStagingArea: string[] = [];
 
 export default async function status(path?: string) {
+  const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
+    .split("/")[2]
+    .trim();
+
+  const commitEntries: Entry[] = await checkCommit();
+  const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
   let currentPath = Deno.cwd();
   const tgitPath = Deno.cwd();
   if (path) {
@@ -102,6 +102,10 @@ async function checkForToBeCommitted(
 }
 
 async function checkCommit(): Promise<Entry[]> {
+  const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
+    .split("/")[2]
+    .trim();
+
   const commitHash = await Deno.readTextFile(
     `.tgit/refs/heads/${currentBranchName}`
   );
