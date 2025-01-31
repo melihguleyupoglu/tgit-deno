@@ -122,32 +122,38 @@ async function checkCommit(): Promise<Entry[]> {
       2
     )}`
   );
-  const rootContentHash = rootHashContent.split("\0")[1];
-  const rootContentHashContent = await Deno.readTextFile(
-    `.tgit/objects/${
-      rootContentHash.charAt(0) + rootContentHash.charAt(1)
-    }/${rootContentHash.slice(2)}`
-  );
-  const lines = rootContentHashContent.split("\n");
-  lines.pop();
-  const entries = [];
-  for (const line of lines) {
-    const parts = line.split(" ");
+  const dirs = rootHashContent.split("\n");
+  for (const dir of dirs) {
+    const rootContentHash = rootHashContent.split("\0")[1];
+    console.log(rootContentHash);
+    const updatedContent = rootContentHash.split("\n")[0];
+    console.log(updatedContent);
+    const rootContentHashContent = await Deno.readTextFile(
+      `.tgit/objects/${
+        updatedContent.charAt(0) + updatedContent.charAt(1)
+      }/${updatedContent.slice(2)}`
+    );
+    const lines = rootContentHashContent.split("\n");
+    lines.pop(); //removing the empty line -> TODO: use trim()
+    const entries = [];
+    for (const line of lines) {
+      const parts = line.split(" ");
 
-    if (parts.length < 3) {
-      console.error("Invalid line format:", line);
-      continue;
-    }
+      if (parts.length < 3) {
+        console.error("Invalid line format:", line);
+        continue;
+      }
 
-    const pathAndBlob = parts[2];
-    if (!pathAndBlob.includes("\0")) {
-      console.error("Invalid pathAndBlob format:", pathAndBlob);
-      continue;
+      const pathAndBlob = parts[2];
+      if (!pathAndBlob.includes("\0")) {
+        console.error("Invalid pathAndBlob format:", pathAndBlob);
+        continue;
+      }
+      const [path, blob] = pathAndBlob.split("\0");
+      entries.push({ path: path, blob: blob });
+      return entries;
     }
-    const [path, blob] = pathAndBlob.split("\0");
-    entries.push({ path: path, blob: blob });
   }
-  return entries;
 }
 
 async function checkStagingArea(): Promise<StagingAreaEntry[]> {
