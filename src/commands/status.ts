@@ -123,8 +123,10 @@ async function checkCommit(): Promise<Entry[]> {
     )}`
   );
   const dirs = rootHashContent.split("\n");
+  const entries = [];
+
   for (const dir of dirs) {
-    const rootContentHash = rootHashContent.split("\0")[1];
+    const rootContentHash = dir.split("\0")[1];
     console.log(rootContentHash);
     const updatedContent = rootContentHash.split("\n")[0];
     console.log(updatedContent);
@@ -135,7 +137,6 @@ async function checkCommit(): Promise<Entry[]> {
     );
     const lines = rootContentHashContent.split("\n");
     lines.pop(); //removing the empty line -> TODO: use trim()
-    const entries = [];
     for (const line of lines) {
       const parts = line.split(" ");
 
@@ -151,9 +152,9 @@ async function checkCommit(): Promise<Entry[]> {
       }
       const [path, blob] = pathAndBlob.split("\0");
       entries.push({ path: path, blob: blob });
-      return entries;
     }
   }
+  return entries;
 }
 
 async function checkStagingArea(): Promise<StagingAreaEntry[]> {
