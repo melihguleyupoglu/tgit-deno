@@ -127,9 +127,9 @@ async function checkCommit(): Promise<Entry[]> {
 
   for (const dir of dirs) {
     const rootContentHash = dir.split("\0")[1];
-    console.log(rootContentHash);
+
     const updatedContent = rootContentHash.split("\n")[0];
-    console.log(updatedContent);
+
     const rootContentHashContent = await Deno.readTextFile(
       `.tgit/objects/${
         updatedContent.charAt(0) + updatedContent.charAt(1)
