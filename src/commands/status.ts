@@ -15,10 +15,6 @@ export const newEntries: string[] = [];
 export const deletedEntriesFromStagingArea: string[] = [];
 
 export default async function status(path?: string) {
-  const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
-    .split("/")[2]
-    .trim();
-
   const commitEntries: Entry[] = await checkCommit();
   const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
   let currentPath = Deno.cwd();
@@ -122,43 +118,49 @@ async function checkCommit(): Promise<Entry[]> {
       2
     )}`
   );
-  const dirs = rootHashContent.split("\n");
-  const entries = [];
+  const commitEntriesArray = rootHashContent.split("\n");
+  const commitEntries = [];
 
-  for (const dir of dirs) {
-    const rootContentHash = dir.split("\0")[1];
+  for (const commitEntry of commitEntriesArray) {
+    const type = commitEntry.split(" ")[1];
+    const path = commitEntry.split("\0")[0].split(" ")[2];
+    const blob = commitEntry.split("\0")[1];
+    if (type === "blob") {
+      commitEntries.push({ path: path, blob: blob });
+    } else {
+      const commitEntryHash = commitEntry.split("\0")[1];
 
-    const updatedContent = rootContentHash.split("\n")[0];
+      const commitEntryContent = await Deno.readTextFile(
+        `.tgit/objects/${
+          commitEntryHash.charAt(0) + commitEntryHash.charAt(1)
+        }/${commitEntryHash.slice(2)}`
+      );
+      const commitEntryLines = commitEntryContent.split("\n");
 
-    const rootContentHashContent = await Deno.readTextFile(
-      `.tgit/objects/${
-        updatedContent.charAt(0) + updatedContent.charAt(1)
-      }/${updatedContent.slice(2)}`
-    );
-    const lines = rootContentHashContent.split("\n");
-    lines.pop(); //removing the empty line -> TODO: use trim()
-    for (const line of lines) {
-      const parts = line.split(" ");
+      for (const line of commitEntryLines) {
+        // console.log(line);
+        const parts = line.split(" ");
 
-      if (parts.length < 3) {
-        console.error("Invalid line format:", line);
-        continue;
+        if (parts.length < 3) {
+          console.error("Invalid line format:", line);
+          continue;
+        }
+
+        const pathAndBlob = parts[2];
+        if (!pathAndBlob.includes("\0")) {
+          console.error("Invalid pathAndBlob format:", pathAndBlob);
+          continue;
+        }
+        const [path, blob] = pathAndBlob.split("\0");
+        commitEntries.push({ path: path, blob: blob });
       }
-
-      const pathAndBlob = parts[2];
-      if (!pathAndBlob.includes("\0")) {
-        console.error("Invalid pathAndBlob format:", pathAndBlob);
-        continue;
-      }
-      const [path, blob] = pathAndBlob.split("\0");
-      entries.push({ path: path, blob: blob });
     }
   }
-  return entries;
+  return commitEntries;
 }
 
 async function checkStagingArea(): Promise<StagingAreaEntry[]> {
-  let stagingAreaEntries: StagingAreaEntry[] = [];
+  const stagingAreaEntries: StagingAreaEntry[] = [];
   const stagingAreaContent = await Deno.readTextFile(".tgit/index");
   const entries = stagingAreaContent.split("\n");
   entries.pop();
