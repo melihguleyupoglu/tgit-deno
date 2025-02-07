@@ -18,6 +18,7 @@ import status, {
   deletedEntriesFromStagingArea,
   newEntries,
   untrackedEntries,
+  notStagedForCommitEntries,
 } from "./commands/status.ts";
 
 interface BranchOptions {
@@ -163,6 +164,10 @@ program.command("status", "Show the working tree status").action(async () => {
   if (deletedEntriesFromStagingArea.length > 0) {
     console.log("deleted files:");
     console.log(deletedEntriesFromStagingArea);
+  }
+  if (notStagedForCommitEntries.length > 0) {
+    console.log("changes not staged for commit:");
+    console.log(notStagedForCommitEntries);
   }
 });
 

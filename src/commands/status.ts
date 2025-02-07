@@ -13,6 +13,7 @@ interface StagingAreaEntry extends Entry {
 export const untrackedEntries: string[] = [];
 export const newEntries: string[] = [];
 export const deletedEntriesFromStagingArea: string[] = [];
+export const notStagedForCommitEntries: string[] = [];
 
 export default async function status(path?: string) {
   const commitEntries: Entry[] = await checkCommit();
@@ -34,6 +35,26 @@ export default async function status(path?: string) {
       } else {
         const fileName = entry.name;
 
+        if (
+          commitEntries.filter((entry) => entry.path === relativePath).length >
+          0
+        ) {
+          try {
+            const commitHash = commitEntries.filter(
+              (entry) => entry.path === relativePath
+            )[0].blob;
+            const workingDirectoryHash = await computeFileHash(relativePath);
+            if (
+              workingDirectoryHash !== commitHash &&
+              stagingAreaEntries.filter((entry) => entry.path === relativePath)
+                .length === 0
+            ) {
+              notStagedForCommitEntries.push(relativePath);
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        }
         if (
           commitEntries.filter((entry) => entry.path === relativePath)
             .length === 0 &&
