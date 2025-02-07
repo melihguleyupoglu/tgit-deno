@@ -15,6 +15,7 @@ import {
   createBranch,
 } from "./utils/branchUtils.ts";
 import status, {
+  modifiedEntries,
   deletedEntriesFromStagingArea,
   newEntries,
   untrackedEntries,
@@ -155,15 +156,25 @@ program
 program.command("status", "Show the working tree status").action(async () => {
   console.log(`On branch ${currentBranchName}`);
   await status();
-  if (untrackedEntries.length > 0) {
-    console.log("untracked files:");
-    console.log(untrackedEntries);
-  } else if (newEntries.length > 0) {
+  if (
+    modifiedEntries.length > 0 ||
+    newEntries.length > 0 ||
+    deletedEntriesFromStagingArea.length > 0
+  ) {
+    console.log("Changes to be committed:");
+  }
+  if (newEntries.length > 0) {
     console.log("new files:");
     console.log(newEntries);
+  } else if (modifiedEntries.length > 0) {
+    console.log("modified:");
+    console.log(modifiedEntries);
   } else if (deletedEntriesFromStagingArea.length > 0) {
-    console.log("deleted files:");
+    console.log("deleted:");
     console.log(deletedEntriesFromStagingArea);
+  } else if (untrackedEntries.length > 0) {
+    console.log("untracked files:");
+    console.log(untrackedEntries);
   } else if (notStagedForCommitEntries.length > 0) {
     console.log("changes not staged for commit:");
     console.log(notStagedForCommitEntries);

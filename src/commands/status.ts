@@ -14,6 +14,7 @@ export const untrackedEntries: string[] = [];
 export const newEntries: string[] = [];
 export const deletedEntriesFromStagingArea: string[] = [];
 export const notStagedForCommitEntries: string[] = [];
+export const modifiedEntries: string[] = [];
 export const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
   .split("/")[2]
   .trim();
@@ -95,8 +96,7 @@ export default async function status(path?: string) {
                 entry.path.trim() === relativePath.trim() &&
                 entry.blob !== hash
               ) {
-                console.log("Changes to be committed:");
-                console.log(`modified: ${fileName}`);
+                modifiedEntries.push(fileName);
               }
             }
           }
