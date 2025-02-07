@@ -17,89 +17,104 @@ export const notStagedForCommitEntries: string[] = [];
 export let currentBranchName: string = "";
 
 export default async function status(path?: string) {
-  const commitEntries: Entry[] = await checkCommit();
-  const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
-  let currentPath = Deno.cwd();
-  const tgitPath = Deno.cwd();
-  if (path) {
-    currentPath = `${path}`;
-  }
-
-  // let ignoreContent = [] as string[];
   try {
-    for await (const entry of Deno.readDir(currentPath)) {
-      const fullPath = `${currentPath}/${entry.name}`;
-      const relativePath = fullPath.replace(`${tgitPath}/`, "");
+    const dirEntries = [];
+    for await (const _ of Deno.readDir(".tgit/objects")) {
+      dirEntries.push(_);
+    }
+    if (dirEntries.length > 0) {
+      const commitEntries: Entry[] = await checkCommit();
+      const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
+      let currentPath = Deno.cwd();
+      const tgitPath = Deno.cwd();
+      if (path) {
+        currentPath = `${path}`;
+      }
 
-      if (entry.isDirectory) {
-        await status(fullPath);
-      } else {
-        const fileName = entry.name;
+      // let ignoreContent = [] as string[];
+      try {
+        for await (const entry of Deno.readDir(currentPath)) {
+          const fullPath = `${currentPath}/${entry.name}`;
+          const relativePath = fullPath.replace(`${tgitPath}/`, "");
 
-        if (
-          commitEntries.filter((entry) => entry.path === relativePath).length >
-          0
-        ) {
-          try {
-            const commitHash = commitEntries.filter(
-              (entry) => entry.path === relativePath
-            )[0].blob;
-            const workingDirectoryHash = await computeFileHash(relativePath);
+          if (entry.isDirectory) {
+            await status(fullPath);
+          } else {
+            const fileName = entry.name;
+
             if (
-              workingDirectoryHash !== commitHash &&
+              commitEntries.filter((entry) => entry.path === relativePath)
+                .length > 0
+            ) {
+              try {
+                const commitHash = commitEntries.filter(
+                  (entry) => entry.path === relativePath
+                )[0].blob;
+                const workingDirectoryHash = await computeFileHash(
+                  relativePath
+                );
+                if (
+                  workingDirectoryHash !== commitHash &&
+                  stagingAreaEntries.filter(
+                    (entry) => entry.path === relativePath
+                  ).length === 0
+                ) {
+                  notStagedForCommitEntries.push(relativePath);
+                }
+              } catch (error) {
+                console.error(error);
+              }
+            }
+            if (
+              commitEntries.filter((entry) => entry.path === relativePath)
+                .length === 0 &&
               stagingAreaEntries.filter((entry) => entry.path === relativePath)
                 .length === 0
             ) {
-              notStagedForCommitEntries.push(relativePath);
+              untrackedEntries.push(relativePath);
+            } else if (
+              commitEntries.filter((entry) => entry.path === relativePath)
+                .length === 0 &&
+              stagingAreaEntries.filter((entry) => entry.path === relativePath)
+                .length === 1
+            ) {
+              newEntries.push(relativePath);
+            } else if (
+              commitEntries.filter((entry) => entry.path === relativePath)
+                .length === 1 &&
+              stagingAreaEntries.filter((entry) => entry.path === relativePath)
+                .length === 0
+            ) {
+              deletedEntriesFromStagingArea.push(relativePath);
             }
-          } catch (error) {
-            console.error(error);
+            const hash = await computeFileHash(fullPath);
+            for (const entry of commitEntries) {
+              if (
+                entry.path.trim() === relativePath.trim() &&
+                entry.blob !== hash
+              ) {
+                console.log("Changes to be committed:");
+                console.log(`modified: ${fileName}`);
+              }
+            }
           }
+
+          // if (fileName in ignoreContent) {
+          //   continue;
+          // } else {
+          //   const hash = await computeFileHash(fileName);
+
+          //   await checkForToBeCommitted(fileName, hash);
+          // }
         }
-        if (
-          commitEntries.filter((entry) => entry.path === relativePath)
-            .length === 0 &&
-          stagingAreaEntries.filter((entry) => entry.path === relativePath)
-            .length === 0
-        ) {
-          untrackedEntries.push(relativePath);
-        } else if (
-          commitEntries.filter((entry) => entry.path === relativePath)
-            .length === 0 &&
-          stagingAreaEntries.filter((entry) => entry.path === relativePath)
-            .length === 1
-        ) {
-          newEntries.push(relativePath);
-        } else if (
-          commitEntries.filter((entry) => entry.path === relativePath)
-            .length === 1 &&
-          stagingAreaEntries.filter((entry) => entry.path === relativePath)
-            .length === 0
-        ) {
-          deletedEntriesFromStagingArea.push(relativePath);
-        }
-        const hash = await computeFileHash(fullPath);
-        for (const entry of commitEntries) {
-          if (
-            entry.path.trim() === relativePath.trim() &&
-            entry.blob !== hash
-          ) {
-            console.log("Changes to be committed:");
-            console.log(`modified: ${fileName}`);
-          }
-        }
+      } catch (error) {
+        console.error("Error:", error);
       }
-
-      // if (fileName in ignoreContent) {
-      //   continue;
-      // } else {
-      //   const hash = await computeFileHash(fileName);
-
-      //   await checkForToBeCommitted(fileName, hash);
-      // }
+    } else {
+      console.log("No commits yet");
     }
   } catch (error) {
-    console.error("Error:", error);
+    console.error(error);
   }
 }
 
