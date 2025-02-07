@@ -22,9 +22,9 @@ import status, {
   currentBranchName,
 } from "./commands/status.ts";
 
-interface BranchOptions {
-  list?: string;
-}
+// interface BranchOptions {
+//   list?: string;
+// }
 
 const program = new Denomander({
   app_name: "Tgit",

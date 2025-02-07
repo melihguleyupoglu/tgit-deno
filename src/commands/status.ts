@@ -14,7 +14,9 @@ export const untrackedEntries: string[] = [];
 export const newEntries: string[] = [];
 export const deletedEntriesFromStagingArea: string[] = [];
 export const notStagedForCommitEntries: string[] = [];
-export let currentBranchName: string = "";
+export const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
+  .split("/")[2]
+  .trim();
 
 export default async function status(path?: string) {
   try {
@@ -135,10 +137,6 @@ async function checkForToBeCommitted(
 }
 
 async function checkCommit(): Promise<Entry[]> {
-  currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
-    .split("/")[2]
-    .trim();
-
   const commitHash = await Deno.readTextFile(
     `.tgit/refs/heads/${currentBranchName}`
   );
@@ -175,7 +173,6 @@ async function checkCommit(): Promise<Entry[]> {
       const commitEntryLines = commitEntryContent.split("\n");
 
       for (const line of commitEntryLines) {
-        // console.log(line);
         const parts = line.split(" ");
 
         if (parts.length < 3) {
