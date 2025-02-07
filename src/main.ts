@@ -158,18 +158,17 @@ program.command("status", "Show the working tree status").action(async () => {
   if (untrackedEntries.length > 0) {
     console.log("untracked files:");
     console.log(untrackedEntries);
-  }
-  if (newEntries.length > 0) {
+  } else if (newEntries.length > 0) {
     console.log("new files:");
     console.log(newEntries);
-  }
-  if (deletedEntriesFromStagingArea.length > 0) {
+  } else if (deletedEntriesFromStagingArea.length > 0) {
     console.log("deleted files:");
     console.log(deletedEntriesFromStagingArea);
-  }
-  if (notStagedForCommitEntries.length > 0) {
+  } else if (notStagedForCommitEntries.length > 0) {
     console.log("changes not staged for commit:");
     console.log(notStagedForCommitEntries);
+  } else {
+    console.log("nothing to commit, working tree clean");
   }
 });
 
