@@ -17,6 +17,7 @@ import {
 import status, {
   modifiedEntries,
   deletedEntriesFromStagingArea,
+  deletedEntriesFromWorkingDir,
   newEntries,
   untrackedEntries,
   notStagedForCommitEntries,
@@ -162,22 +163,31 @@ program.command("status", "Show the working tree status").action(async () => {
     deletedEntriesFromStagingArea.length > 0
   ) {
     console.log("Changes to be committed:");
-  }
-  if (newEntries.length > 0) {
-    console.log("new files:");
-    console.log(newEntries);
-  } else if (modifiedEntries.length > 0) {
-    console.log("modified:");
-    console.log(modifiedEntries);
-  } else if (deletedEntriesFromStagingArea.length > 0) {
-    console.log("deleted:");
-    console.log(deletedEntriesFromStagingArea);
+    if (newEntries.length > 0) {
+      console.log("new files:");
+      console.log(newEntries);
+    } else if (modifiedEntries.length > 0) {
+      console.log("modified:");
+      console.log(modifiedEntries);
+    } else if (deletedEntriesFromStagingArea.length > 0) {
+      console.log("deleted:");
+      console.log(deletedEntriesFromStagingArea);
+    }
+  } else if (
+    notStagedForCommitEntries.length > 0 ||
+    deletedEntriesFromWorkingDir.length > 0
+  ) {
+    console.log("Changes not staged for commit:");
+    if (notStagedForCommitEntries.length > 0) {
+      console.log("changes not staged for commit:");
+      console.log(notStagedForCommitEntries);
+    } else {
+      console.log("deleted:");
+      console.log(deletedEntriesFromWorkingDir);
+    }
   } else if (untrackedEntries.length > 0) {
     console.log("untracked files:");
     console.log(untrackedEntries);
-  } else if (notStagedForCommitEntries.length > 0) {
-    console.log("changes not staged for commit:");
-    console.log(notStagedForCommitEntries);
   } else {
     console.log("nothing to commit, working tree clean");
   }
