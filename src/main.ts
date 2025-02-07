@@ -19,6 +19,7 @@ import status, {
   newEntries,
   untrackedEntries,
   notStagedForCommitEntries,
+  currentBranchName,
 } from "./commands/status.ts";
 
 interface BranchOptions {
@@ -152,6 +153,7 @@ program
   });
 
 program.command("status", "Show the working tree status").action(async () => {
+  console.log(`On branch ${currentBranchName}`);
   await status();
   if (untrackedEntries.length > 0) {
     console.log("untracked files:");
