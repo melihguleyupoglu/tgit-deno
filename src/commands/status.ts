@@ -67,6 +67,16 @@ export default async function status(path?: string) {
                 ) {
                   notStagedForCommitEntries.push(relativePath);
                 }
+                if (
+                  stagingAreaEntries.filter(
+                    (entry) => entry.path === relativePath
+                  ).length === 1 &&
+                  stagingAreaEntries.filter(
+                    (entry) => entry.path === relativePath
+                  )[0].blob !== workingDirectoryHash
+                ) {
+                  notStagedForCommitEntries.push(relativePath);
+                }
               } catch (error) {
                 console.error(error);
               }
