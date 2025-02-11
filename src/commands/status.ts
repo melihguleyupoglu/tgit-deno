@@ -45,6 +45,9 @@ export default async function status(path?: string) {
           if (entry.isDirectory) {
             await status(fullPath);
           } else {
+            const stagedEntry = stagingAreaEntries.find(
+              (entry) => entry.path === relativePath
+            );
             const fileName = entry.name;
             workingDirEntries.push({ blob: "", path: relativePath });
 
@@ -67,14 +70,7 @@ export default async function status(path?: string) {
                 ) {
                   notStagedForCommitEntries.push(relativePath);
                 }
-                if (
-                  stagingAreaEntries.filter(
-                    (entry) => entry.path === relativePath
-                  ).length === 1 &&
-                  stagingAreaEntries.filter(
-                    (entry) => entry.path === relativePath
-                  )[0].blob !== workingDirectoryHash
-                ) {
+                if (stagedEntry && stagedEntry.blob !== workingDirectoryHash) {
                   notStagedForCommitEntries.push(relativePath);
                 }
               } catch (error) {
