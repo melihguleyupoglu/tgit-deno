@@ -45,6 +45,7 @@ export default async function status(path?: string) {
           if (entry.isDirectory) {
             await status(fullPath);
           } else {
+            // TODO: migrate to find function on all conditions
             const stagedEntry = stagingAreaEntries.find(
               (entry) => entry.path === relativePath
             );
