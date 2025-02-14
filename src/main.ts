@@ -21,8 +21,8 @@ import status, {
   newEntries,
   untrackedEntries,
   notStagedForCommitEntries,
-  currentBranchName,
 } from "./commands/status.ts";
+import getBranchName from "./config/getBranchName.ts";
 
 // interface BranchOptions {
 //   list?: string;
@@ -155,6 +155,7 @@ program
   });
 
 program.command("status", "Show the working tree status").action(async () => {
+  const currentBranchName = await getBranchName();
   console.log(`On branch ${currentBranchName}`);
   await status();
   if (

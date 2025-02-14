@@ -1,5 +1,6 @@
 import { inflate } from "https://deno.land/x/compress@v0.5.5/mod.ts";
 import { computeFileHash } from "./add.ts";
+import getBranchName from "../config/getBranchName.ts";
 
 interface Entry {
   path: string;
@@ -17,9 +18,9 @@ export const deletedEntriesFromStagingArea: string[] = [];
 export const notStagedForCommitEntries: string[] = [];
 export const modifiedEntries: string[] = [];
 export const deletedEntriesFromWorkingDir: string[] = [];
-export const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
-  .split("/")[2]
-  .trim();
+// export const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
+//   .split("/")[2]
+//   .trim();
 
 export default async function status(path?: string) {
   try {
@@ -49,6 +50,12 @@ export default async function status(path?: string) {
             const stagedEntry = stagingAreaEntries.find(
               (entry) => entry.path === relativePath
             );
+            const commitEntry = commitEntries.find(
+              (entry) => entry.path === relativePath
+            );
+            const workingAreaEntry = workingDirEntries.find(
+              (entry) => entry.path === relativePath
+            );
             const fileName = entry.name;
             workingDirEntries.push({ blob: "", path: relativePath });
 
@@ -57,18 +64,11 @@ export default async function status(path?: string) {
                 .length > 0
             ) {
               try {
-                const commitHash = commitEntries.filter(
-                  (entry) => entry.path === relativePath
-                )[0].blob;
+                const commitHash = commitEntry?.blob;
                 const workingDirectoryHash = await computeFileHash(
                   relativePath
                 );
-                if (
-                  workingDirectoryHash !== commitHash &&
-                  stagingAreaEntries.filter(
-                    (entry) => entry.path === relativePath
-                  ).length === 0
-                ) {
+                if (workingDirectoryHash !== commitHash && !stagedEntry) {
                   notStagedForCommitEntries.push(relativePath);
                 }
                 if (stagedEntry && stagedEntry.blob !== workingDirectoryHash) {
@@ -78,33 +78,13 @@ export default async function status(path?: string) {
                 console.error(error);
               }
             }
-            if (
-              commitEntries.filter((entry) => entry.path === relativePath)
-                .length === 0 &&
-              stagingAreaEntries.filter((entry) => entry.path === relativePath)
-                .length === 0
-            ) {
+            if (!commitEntry && !stagedEntry) {
               untrackedEntries.push(relativePath);
-            } else if (
-              commitEntries.filter((entry) => entry.path === relativePath)
-                .length === 0 &&
-              stagingAreaEntries.filter((entry) => entry.path === relativePath)
-                .length === 1
-            ) {
+            } else if (!commitEntry && stagedEntry) {
               newEntries.push(relativePath);
-            } else if (
-              commitEntries.filter((entry) => entry.path === relativePath)
-                .length === 1 &&
-              stagingAreaEntries.filter((entry) => entry.path === relativePath)
-                .length === 0
-            ) {
+            } else if (commitEntry && !stagedEntry) {
               deletedEntriesFromStagingArea.push(relativePath);
-            } else if (
-              commitEntries.filter((entry) => entry.path === relativePath)
-                .length === 1 &&
-              workingDirEntries.filter((entry) => entry.path === relativePath)
-                .length === 0
-            ) {
+            } else if (commitEntry && !workingAreaEntry) {
               deletedEntriesFromWorkingDir.push(relativePath);
             }
             const hash = await computeFileHash(fullPath);
@@ -154,6 +134,7 @@ async function checkForToBeCommitted(
 }
 
 async function checkCommit(): Promise<Entry[]> {
+  const currentBranchName = await getBranchName();
   const commitHash = await Deno.readTextFile(
     `.tgit/refs/heads/${currentBranchName}`
   );
