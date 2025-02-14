@@ -53,11 +53,11 @@ export default async function status(path?: string) {
             const commitEntry = commitEntries.find(
               (entry) => entry.path === relativePath
             );
+            const fileName = entry.name;
+            workingDirEntries.push({ blob: "", path: relativePath });
             const workingAreaEntry = workingDirEntries.find(
               (entry) => entry.path === relativePath
             );
-            const fileName = entry.name;
-            workingDirEntries.push({ blob: "", path: relativePath });
 
             if (
               commitEntries.filter((entry) => entry.path === relativePath)
