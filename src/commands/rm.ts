@@ -43,7 +43,6 @@ async function removeFileFromStaging(lineNumber: number, lines: string[]) {
   try {
     const removedLine = lines.splice(lineNumber, 1);
     const file = removedLine[0].split(" ")[2];
-    console.log(file);
     if (file.length > 0) {
       console.log(`${file} removed from staging area`);
     }
@@ -60,7 +59,7 @@ function checkEntryOnIndex(
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const parts = line.split(" ");
-    if (parts.length === 3 && parts[2] === entry) {
+    if (parts.length === 4 && parts[2] === entry) {
       return { exists: true, lineNumber: i };
     }
   }
