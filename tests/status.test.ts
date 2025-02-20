@@ -18,3 +18,9 @@ Deno.test("status command - empty staging area and commit", async () => {
     cleanupTgitDir();
   }
 });
+
+Deno.test("status command - changes to be committed", () => {});
+
+Deno.test("status command - modified entries on working area", () => {});
+
+Deno.test("status command - modified entries on staging area", () => {});

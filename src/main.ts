@@ -15,7 +15,8 @@ import {
   createBranch,
 } from "./utils/branchUtils.ts";
 import status, {
-  modifiedEntries,
+  modifiedEntriesOnWorkingSpace,
+  modifiedEntriesOnStagingArea,
   deletedEntriesFromStagingArea,
   deletedEntriesFromWorkingDir,
   newEntries,
@@ -159,7 +160,7 @@ program.command("status", "Show the working tree status").action(async () => {
   console.log(`On branch ${currentBranchName}`);
   await status();
   if (
-    modifiedEntries.length > 0 ||
+    modifiedEntriesOnStagingArea.length > 0 ||
     newEntries.length > 0 ||
     deletedEntriesFromStagingArea.length > 0
   ) {
@@ -167,26 +168,35 @@ program.command("status", "Show the working tree status").action(async () => {
     if (newEntries.length > 0) {
       console.log("new files:");
       console.log(newEntries);
-    } else if (modifiedEntries.length > 0) {
+    }
+    if (modifiedEntriesOnStagingArea.length > 0) {
       console.log("modified:");
-      console.log(modifiedEntries);
-    } else if (deletedEntriesFromStagingArea.length > 0) {
+      console.log(modifiedEntriesOnStagingArea);
+    }
+    if (deletedEntriesFromStagingArea.length > 0) {
       console.log("deleted:");
       console.log(deletedEntriesFromStagingArea);
     }
-  } else if (
+  }
+  if (
     notStagedForCommitEntries.length > 0 ||
-    deletedEntriesFromWorkingDir.length > 0
+    deletedEntriesFromWorkingDir.length > 0 ||
+    modifiedEntriesOnWorkingSpace.length > 0
   ) {
     console.log("Changes not staged for commit:");
     if (notStagedForCommitEntries.length > 0) {
-      console.log("changes not staged for commit:");
       console.log(notStagedForCommitEntries);
-    } else {
+    }
+    if (modifiedEntriesOnWorkingSpace.length > 0) {
+      console.log("modified:");
+      console.log(modifiedEntriesOnWorkingSpace);
+    }
+    if (deletedEntriesFromStagingArea.length > 0) {
       console.log("deleted:");
       console.log(deletedEntriesFromWorkingDir);
     }
-  } else if (untrackedEntries.length > 0) {
+  }
+  if (untrackedEntries.length > 0) {
     console.log("untracked files:");
     console.log(untrackedEntries);
   } else {

@@ -16,7 +16,8 @@ export const workingDirEntries: Entry[] = [];
 export const newEntries: string[] = [];
 export const deletedEntriesFromStagingArea: string[] = [];
 export const notStagedForCommitEntries: string[] = [];
-export const modifiedEntries: string[] = [];
+export const modifiedEntriesOnWorkingSpace: string[] = [];
+export const modifiedEntriesOnStagingArea: string[] = [];
 export const deletedEntriesFromWorkingDir: string[] = [];
 // export const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
 //   .split("/")[2]
@@ -46,7 +47,6 @@ export default async function status(path?: string) {
           if (entry.isDirectory) {
             await status(fullPath);
           } else {
-            // TODO: migrate to find function on all conditions
             const stagedEntry = stagingAreaEntries.find(
               (entry) => entry.path === relativePath
             );
@@ -64,15 +64,13 @@ export default async function status(path?: string) {
                 .length > 0
             ) {
               try {
-                const commitHash = commitEntry?.blob;
+                const commitBlob = commitEntry?.blob;
                 const workingDirectoryHash = await computeFileHash(
                   relativePath
                 );
-                if (workingDirectoryHash !== commitHash && !stagedEntry) {
-                  notStagedForCommitEntries.push(relativePath);
-                }
-                if (stagedEntry && stagedEntry.blob !== workingDirectoryHash) {
-                  notStagedForCommitEntries.push(relativePath);
+                // TODO: Change the modifiedEntriesOnWorkingSpace push below
+                if (stagedEntry && stagedEntry.mtime !== commitEntry?.blob) {
+                  modifiedEntriesOnWorkingSpace.push(relativePath);
                 }
               } catch (error) {
                 console.error(error);
@@ -84,18 +82,24 @@ export default async function status(path?: string) {
               newEntries.push(relativePath);
             } else if (commitEntry && !stagedEntry) {
               deletedEntriesFromStagingArea.push(relativePath);
+            } else if (
+              commitEntry &&
+              stagedEntry &&
+              commitEntry.blob !== stagedEntry.blob
+            ) {
+              modifiedEntriesOnStagingArea.push(relativePath);
             } else if (commitEntry && !workingAreaEntry) {
               deletedEntriesFromWorkingDir.push(relativePath);
             }
-            const hash = await computeFileHash(fullPath);
-            for (const entry of commitEntries) {
-              if (
-                entry.path.trim() === relativePath.trim() &&
-                entry.blob !== hash
-              ) {
-                modifiedEntries.push(fileName);
-              }
-            }
+            // const hash = await computeFileHash(fullPath);
+            // for (const entry of commitEntries) {
+            //   if (
+            //     entry.path.trim() === relativePath.trim() &&
+            //     entry.blob !== hash
+            //   ) {
+            //     modifiedEntriesOnWorkingSpace.push(fileName);
+            //   }
+            // }
           }
 
           // if (fileName in ignoreContent) {
@@ -115,22 +119,6 @@ export default async function status(path?: string) {
   } catch (error) {
     console.error(error);
   }
-}
-
-async function checkForToBeCommitted(
-  fileName: string,
-  blobParam: string
-): Promise<void> {
-  // const indexContent = await Deno.readTextFile(".tgit/index");
-  // const mtime = (await Deno.lstat(fileName)).mtime ?? 0;
-  // const lines = indexContent.split("\n");
-  // console.log("Changes to be committed:\n");
-  // for (const entry of lines) {
-  //   if (entry[2] === fileName && entry[3] !== mtime.toString()) {
-  //     console.log(`\tmodified: ${fileName}\n`);
-  //   }
-  //   // else if()
-  // }
 }
 
 async function checkCommit(): Promise<Entry[]> {
