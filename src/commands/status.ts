@@ -19,9 +19,7 @@ export const notStagedForCommitEntries: string[] = [];
 export const modifiedEntriesOnWorkingSpace: string[] = [];
 export const modifiedEntriesOnStagingArea: string[] = [];
 export const deletedEntriesFromWorkingDir: string[] = [];
-// export const currentBranchName = (await Deno.readTextFile(".tgit/HEAD"))
-//   .split("/")[2]
-//   .trim();
+export let commitEntries: Entry[] = [];
 
 export default async function status(path?: string) {
   try {
@@ -30,91 +28,87 @@ export default async function status(path?: string) {
       dirEntries.push(_);
     }
     if (dirEntries.length > 0) {
-      const commitEntries: Entry[] = await checkCommit();
-      const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
-      let currentPath = Deno.cwd();
-      const tgitPath = Deno.cwd();
-      if (path) {
-        currentPath = `${path}`;
-      }
+      commitEntries = await checkCommit();
+    }
+    const stagingAreaEntries: StagingAreaEntry[] = await checkStagingArea();
+    let currentPath = Deno.cwd();
+    const tgitPath = Deno.cwd();
+    if (path) {
+      currentPath = `${path}`;
+    }
 
-      // let ignoreContent = [] as string[];
-      try {
-        for await (const entry of Deno.readDir(currentPath)) {
-          const fullPath = `${currentPath}/${entry.name}`;
-          const relativePath = fullPath.replace(`${tgitPath}/`, "");
+    // let ignoreContent = [] as string[];
+    try {
+      for await (const entry of Deno.readDir(currentPath)) {
+        const fullPath = `${currentPath}/${entry.name}`;
+        const relativePath = fullPath.replace(`${tgitPath}/`, "");
 
-          if (entry.isDirectory) {
-            await status(fullPath);
-          } else {
-            const stagedEntry = stagingAreaEntries.find(
-              (entry) => entry.path === relativePath
-            );
-            const commitEntry = commitEntries.find(
-              (entry) => entry.path === relativePath
-            );
-            const fileName = entry.name;
-            workingDirEntries.push({ blob: "", path: relativePath });
-            const workingAreaEntry = workingDirEntries.find(
-              (entry) => entry.path === relativePath
-            );
+        if (entry.isDirectory) {
+          await status(fullPath);
+        } else {
+          const stagedEntry = stagingAreaEntries.find(
+            (entry) => entry.path === relativePath
+          );
+          const commitEntry = commitEntries.find(
+            (entry) => entry.path === relativePath
+          );
+          const fileName = entry.name;
+          workingDirEntries.push({ blob: "", path: relativePath });
+          const workingAreaEntry = workingDirEntries.find(
+            (entry) => entry.path === relativePath
+          );
 
-            if (
-              commitEntries.filter((entry) => entry.path === relativePath)
-                .length > 0
-            ) {
-              try {
-                const commitBlob = commitEntry?.blob;
-                const workingDirectoryHash = await computeFileHash(
-                  relativePath
-                );
-                // TODO: Change the modifiedEntriesOnWorkingSpace push below
-                if (stagedEntry && stagedEntry.mtime !== commitEntry?.blob) {
-                  modifiedEntriesOnWorkingSpace.push(relativePath);
-                }
-              } catch (error) {
-                console.error(error);
+          if (
+            commitEntries.filter((entry) => entry.path === relativePath)
+              .length > 0
+          ) {
+            try {
+              const commitBlob = commitEntry?.blob;
+              const workingDirectoryHash = await computeFileHash(relativePath);
+              // TODO: Change the modifiedEntriesOnWorkingSpace push below
+              if (stagedEntry && stagedEntry.mtime !== commitEntry?.blob) {
+                modifiedEntriesOnWorkingSpace.push(relativePath);
               }
+            } catch (error) {
+              console.error(error);
             }
-            if (!commitEntry && !stagedEntry) {
-              untrackedEntries.push(relativePath);
-            } else if (!commitEntry && stagedEntry) {
-              newEntries.push(relativePath);
-            } else if (commitEntry && !stagedEntry) {
-              deletedEntriesFromStagingArea.push(relativePath);
-            } else if (
-              commitEntry &&
-              stagedEntry &&
-              commitEntry.blob !== stagedEntry.blob
-            ) {
-              modifiedEntriesOnStagingArea.push(relativePath);
-            } else if (commitEntry && !workingAreaEntry) {
-              deletedEntriesFromWorkingDir.push(relativePath);
-            }
-            // const hash = await computeFileHash(fullPath);
-            // for (const entry of commitEntries) {
-            //   if (
-            //     entry.path.trim() === relativePath.trim() &&
-            //     entry.blob !== hash
-            //   ) {
-            //     modifiedEntriesOnWorkingSpace.push(fileName);
-            //   }
-            // }
           }
-
-          // if (fileName in ignoreContent) {
-          //   continue;
-          // } else {
-          //   const hash = await computeFileHash(fileName);
-
-          //   await checkForToBeCommitted(fileName, hash);
+          if (!commitEntry && !stagedEntry) {
+            untrackedEntries.push(relativePath);
+          } else if (!commitEntry && stagedEntry) {
+            newEntries.push(relativePath);
+          } else if (commitEntry && !stagedEntry) {
+            deletedEntriesFromStagingArea.push(relativePath);
+          } else if (
+            commitEntry &&
+            stagedEntry &&
+            commitEntry.blob !== stagedEntry.blob
+          ) {
+            modifiedEntriesOnStagingArea.push(relativePath);
+          } else if (commitEntry && !workingAreaEntry) {
+            deletedEntriesFromWorkingDir.push(relativePath);
+          }
+          // const hash = await computeFileHash(fullPath);
+          // for (const entry of commitEntries) {
+          //   if (
+          //     entry.path.trim() === relativePath.trim() &&
+          //     entry.blob !== hash
+          //   ) {
+          //     modifiedEntriesOnWorkingSpace.push(fileName);
+          //   }
           // }
         }
-      } catch (error) {
-        console.error("Error:", error);
+
+        // if (fileName in ignoreContent) {
+        //   continue;
+        // } else {
+        //   const hash = await computeFileHash(fileName);
+
+        //   await checkForToBeCommitted(fileName, hash);
+        // }
       }
-    } else {
-      console.log("No commits yet");
+    } catch (error) {
+      console.error("Error:", error);
     }
   } catch (error) {
     console.error(error);
@@ -122,60 +116,66 @@ export default async function status(path?: string) {
 }
 
 async function checkCommit(): Promise<Entry[]> {
-  const currentBranchName = await getBranchName();
-  const commitHash = await Deno.readTextFile(
-    `.tgit/refs/heads/${currentBranchName}`
-  );
-  const commitObjectCompressed = await Deno.readFile(
-    `.tgit/objects/${
-      commitHash.charAt(0) + commitHash.charAt(1)
-    }/${commitHash.slice(2)}`
-  );
-  const uint8Array = inflate(commitObjectCompressed);
-  const decodedCommitObject = new TextDecoder().decode(uint8Array);
-  const rootHash = decodedCommitObject.split("\n")[0].split(" ")[1];
-  const rootHashContent = await Deno.readTextFile(
-    `.tgit/objects/${rootHash.charAt(0) + rootHash.charAt(1)}/${rootHash.slice(
-      2
-    )}`
-  );
-  const commitEntriesArray = rootHashContent.split("\n");
   const commitEntries = [];
 
-  for (const commitEntry of commitEntriesArray) {
-    const type = commitEntry.split(" ")[1];
-    const path = commitEntry.split("\0")[0].split(" ")[2];
-    const blob = commitEntry.split("\0")[1];
-    if (type === "blob") {
-      commitEntries.push({ path: path, blob: blob });
-    } else {
-      const commitEntryHash = commitEntry.split("\0")[1];
+  try {
+    const currentBranchName = await getBranchName();
+    const commitHash = await Deno.readTextFile(
+      `.tgit/refs/heads/${currentBranchName}`
+    );
+    const commitObjectCompressed = await Deno.readFile(
+      `.tgit/objects/${
+        commitHash.charAt(0) + commitHash.charAt(1)
+      }/${commitHash.slice(2)}`
+    );
+    const uint8Array = inflate(commitObjectCompressed);
+    const decodedCommitObject = new TextDecoder().decode(uint8Array);
+    const rootHash = decodedCommitObject.split("\n")[0].split(" ")[1];
+    const rootHashContent = await Deno.readTextFile(
+      `.tgit/objects/${
+        rootHash.charAt(0) + rootHash.charAt(1)
+      }/${rootHash.slice(2)}`
+    );
+    const commitEntriesArray = rootHashContent.split("\n");
 
-      const commitEntryContent = await Deno.readTextFile(
-        `.tgit/objects/${
-          commitEntryHash.charAt(0) + commitEntryHash.charAt(1)
-        }/${commitEntryHash.slice(2)}`
-      );
-      const commitEntryLines = commitEntryContent.split("\n");
-
-      for (const line of commitEntryLines) {
-        const parts = line.split(" ");
-
-        if (parts.length < 3) {
-          console.error("Invalid line format:", line);
-          continue;
-        }
-
-        const pathAndBlob = parts[2];
-        if (!pathAndBlob.includes("\0")) {
-          console.error("Invalid pathAndBlob format:", pathAndBlob);
-          continue;
-        }
-        const [path, blob] = pathAndBlob.split("\0");
+    for (const commitEntry of commitEntriesArray) {
+      const type = commitEntry.split(" ")[1];
+      const path = commitEntry.split("\0")[0].split(" ")[2];
+      const blob = commitEntry.split("\0")[1];
+      if (type === "blob") {
         commitEntries.push({ path: path, blob: blob });
+      } else {
+        const commitEntryHash = commitEntry.split("\0")[1];
+
+        const commitEntryContent = await Deno.readTextFile(
+          `.tgit/objects/${
+            commitEntryHash.charAt(0) + commitEntryHash.charAt(1)
+          }/${commitEntryHash.slice(2)}`
+        );
+        const commitEntryLines = commitEntryContent.split("\n");
+
+        for (const line of commitEntryLines) {
+          const parts = line.split(" ");
+
+          if (parts.length < 3) {
+            console.error("Invalid line format:", line);
+            continue;
+          }
+
+          const pathAndBlob = parts[2];
+          if (!pathAndBlob.includes("\0")) {
+            console.error("Invalid pathAndBlob format:", pathAndBlob);
+            continue;
+          }
+          const [path, blob] = pathAndBlob.split("\0");
+          commitEntries.push({ path: path, blob: blob });
+        }
       }
     }
+  } catch (e) {
+    console.error(e);
   }
+
   return commitEntries;
 }
 
