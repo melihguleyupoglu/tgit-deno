@@ -11,8 +11,12 @@ interface StagingAreaEntry extends Entry {
   mtime: string;
 }
 
+interface WorkingDirEntries extends Entry {
+  mtime: string;
+}
+
 export const untrackedEntries: string[] = [];
-export const workingDirEntries: Entry[] = [];
+export const workingDirEntries: WorkingDirEntries[] = [];
 export const newEntries: string[] = [];
 export const deletedEntriesFromStagingArea: string[] = [];
 export const notStagedForCommitEntries: string[] = [];
@@ -53,7 +57,13 @@ export default async function status(path?: string) {
             (entry) => entry.path === relativePath
           );
           const fileName = entry.name;
-          workingDirEntries.push({ blob: "", path: relativePath });
+          const mtime =
+            (await Deno.lstat(fullPath)).mtime?.valueOf().toString() ?? "0";
+          workingDirEntries.push({
+            blob: "",
+            path: relativePath,
+            mtime: mtime,
+          });
           const workingAreaEntry = workingDirEntries.find(
             (entry) => entry.path === relativePath
           );
@@ -66,7 +76,11 @@ export default async function status(path?: string) {
               const commitBlob = commitEntry?.blob;
               const workingDirectoryHash = await computeFileHash(relativePath);
               // TODO: Change the modifiedEntriesOnWorkingSpace push below
-              if (stagedEntry && stagedEntry.mtime !== commitEntry?.blob) {
+              if (
+                commitEntry &&
+                stagedEntry &&
+                stagedEntry.mtime !== workingAreaEntry?.mtime
+              ) {
                 modifiedEntriesOnWorkingSpace.push(relativePath);
               }
             } catch (error) {
