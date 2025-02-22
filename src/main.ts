@@ -191,7 +191,7 @@ program.command("status", "Show the working tree status").action(async () => {
       console.log("modified:");
       console.log(modifiedEntriesOnWorkingSpace);
     }
-    if (deletedEntriesFromStagingArea.length > 0) {
+    if (deletedEntriesFromWorkingDir.length > 0) {
       console.log("deleted:");
       console.log(deletedEntriesFromWorkingDir);
     }
