@@ -1,6 +1,7 @@
 import { indexPath } from "./add.ts";
 import process from "node:process";
-import { deflate } from "https://deno.land/x/compress@v0.5.5/mod.ts";
+import { inflate, deflate } from "https://deno.land/x/compress@v0.5.5/mod.ts";
+
 interface StagingAreaEntry {
   fileInfo: string;
   blob: string;
@@ -33,10 +34,14 @@ export async function commit(message: string) {
   const treeHash = await buildTree(tree, "root");
   const author = await getAuthor();
   const date = Date.now();
-  const commit = await hashCommit(treeHash, author, message, date);
-  await updateRefWithCommit(
-    await createCommit(commit.hash, commit.commitContent)
-  );
+  if ((await getPreviousCommitHash()) !== treeHash) {
+    const commit = await hashCommit(treeHash, author, message, date);
+    await updateRefWithCommit(
+      await createCommit(commit.hash, commit.commitContent)
+    );
+  } else {
+    console.log("No changes detected. Commit not created.");
+  }
 }
 
 function isIndexEmpty(): boolean {
@@ -235,5 +240,28 @@ async function updateRefWithCommit(commitHash: string): Promise<boolean> {
   } else {
     console.log("Couldn't fetch the current branch info");
     return false;
+  }
+}
+
+async function getPreviousCommitHash(): Promise<string> {
+  try {
+    const currentBranchName = (await Deno.readTextFile(".tgit/HEAD")).split(
+      "/"
+    )[2];
+    const currentPath = `./.tgit/refs/heads/${currentBranchName}`.trim();
+    const previousCommitHash = await Deno.readTextFile(currentPath);
+    const encodedCommitContent = await Deno.readFile(
+      `.tgit/objects/${
+        previousCommitHash.charAt(0) + previousCommitHash.charAt(1)
+      }/${previousCommitHash.slice(2)}`
+    );
+    const uint8Array = inflate(encodedCommitContent);
+    const decodedCommitContent = new TextDecoder().decode(uint8Array);
+    const treeHash = decodedCommitContent.split("\n")[0].split(" ")[1];
+
+    return treeHash;
+  } catch (error) {
+    console.error(error);
+    return "";
   }
 }
