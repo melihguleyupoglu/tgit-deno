@@ -250,10 +250,14 @@ async function getPreviousCommitHash(): Promise<string> {
     )[2];
     const currentPath = `./.tgit/refs/heads/${currentBranchName}`.trim();
     const previousCommitHash = await Deno.readTextFile(currentPath);
+    if (!previousCommitHash) {
+      return "";
+    }
+    const folderPath =
+      previousCommitHash.charAt(0) + previousCommitHash.charAt(1);
+    const filePath = previousCommitHash.slice(2);
     const encodedCommitContent = await Deno.readFile(
-      `.tgit/objects/${
-        previousCommitHash.charAt(0) + previousCommitHash.charAt(1)
-      }/${previousCommitHash.slice(2)}`
+      `./.tgit/objects/${folderPath}/${filePath}`
     );
     const uint8Array = inflate(encodedCommitContent);
     const decodedCommitContent = new TextDecoder().decode(uint8Array);
