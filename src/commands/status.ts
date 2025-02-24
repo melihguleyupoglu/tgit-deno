@@ -41,6 +41,16 @@ export default async function status(path?: string) {
       currentPath = `${path}`;
     }
 
+    for (const entry of commitEntries) {
+      try {
+        await Deno.stat(entry.path);
+      } catch (error) {
+        if (error instanceof Deno.errors.NotFound) {
+          deletedEntriesFromWorkingDir.push(entry.path);
+        }
+      }
+    }
+
     // let ignoreContent = [] as string[];
     try {
       for await (const entry of Deno.readDir(currentPath)) {
@@ -50,13 +60,6 @@ export default async function status(path?: string) {
         if (entry.isDirectory) {
           await status(fullPath);
         } else {
-          const stagedEntry = stagingAreaEntries.find(
-            (entry) => entry.path === relativePath
-          );
-          const commitEntry = commitEntries.find(
-            (entry) => entry.path === relativePath
-          );
-          const fileName = entry.name;
           const mtime =
             (await Deno.lstat(fullPath)).mtime?.valueOf().toString() ?? "0";
           workingDirEntries.push({
@@ -64,6 +67,13 @@ export default async function status(path?: string) {
             path: relativePath,
             mtime: mtime,
           });
+
+          const stagedEntry = stagingAreaEntries.find(
+            (entry) => entry.path === relativePath
+          );
+          const commitEntry = commitEntries.find(
+            (entry) => entry.path === relativePath
+          );
           const workingAreaEntry = workingDirEntries.find(
             (entry) => entry.path === relativePath
           );
@@ -73,9 +83,9 @@ export default async function status(path?: string) {
               .length > 0
           ) {
             try {
-              const commitBlob = commitEntry?.blob;
-              const workingDirectoryHash = await computeFileHash(relativePath);
-              // TODO: Change the modifiedEntriesOnWorkingSpace push below
+              // const commitBlob = commitEntry?.blob;
+              // const workingDirectoryHash = await computeFileHash(relativePath);
+
               if (
                 commitEntry &&
                 stagedEntry &&
@@ -102,24 +112,7 @@ export default async function status(path?: string) {
           } else if (commitEntry && !workingAreaEntry) {
             deletedEntriesFromWorkingDir.push(relativePath);
           }
-          // const hash = await computeFileHash(fullPath);
-          // for (const entry of commitEntries) {
-          //   if (
-          //     entry.path.trim() === relativePath.trim() &&
-          //     entry.blob !== hash
-          //   ) {
-          //     modifiedEntriesOnWorkingSpace.push(fileName);
-          //   }
-          // }
         }
-
-        // if (fileName in ignoreContent) {
-        //   continue;
-        // } else {
-        //   const hash = await computeFileHash(fileName);
-
-        //   await checkForToBeCommitted(fileName, hash);
-        // }
       }
     } catch (error) {
       console.error("Error:", error);
