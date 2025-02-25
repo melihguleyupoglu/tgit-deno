@@ -45,7 +45,7 @@ export default async function status(path?: string) {
         await Deno.stat(entry.path);
       } catch (error) {
         if (error instanceof Deno.errors.NotFound) {
-          deletedEntriesFromWorkingDir.push(entry.path);
+          addUniqueEntry(deletedEntriesFromWorkingDir, entry.path);
         }
       }
     }
@@ -195,4 +195,10 @@ async function checkStagingArea(): Promise<StagingAreaEntry[]> {
     stagingAreaEntries.push({ blob: blob, path: path, mtime: mtime });
   }
   return stagingAreaEntries;
+}
+
+function addUniqueEntry(array: string[], entry: string): void {
+  if (!array.includes(entry)) {
+    array.push(entry);
+  }
 }
