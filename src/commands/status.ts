@@ -1,5 +1,4 @@
 import { inflate } from "https://deno.land/x/compress@v0.5.5/mod.ts";
-import { computeFileHash } from "./add.ts";
 import getBranchName from "../config/getBranchName.ts";
 
 interface Entry {
