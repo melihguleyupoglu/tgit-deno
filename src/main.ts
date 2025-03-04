@@ -24,6 +24,9 @@ import status, {
   notStagedForCommitEntries,
 } from "./commands/status.ts";
 import getBranchName from "./config/getBranchName.ts";
+import path from "node:path";
+
+const HEADS_PATH: string = ".tgit/refs/heads/";
 
 // interface BranchOptions {
 //   list?: string;
@@ -203,5 +206,25 @@ program.command("status", "Show the working tree status").action(async () => {
     console.log("nothing to commit, working tree clean");
   }
 });
+
+program
+  .command("branch [branchName]", "Create, list, delete branches")
+  .action(async (branch: { branchName?: string }) => {
+    try {
+      if (!branch.branchName) {
+        console.log(branch.branchName);
+        console.log(
+          "Please provide a branch name to create one (tgit branch <branchName>)"
+        );
+      } else {
+        const branchPath = path.join(HEADS_PATH, branch.branchName);
+        console.log(branchPath);
+        await Deno.writeTextFile(branchPath, "");
+        console.log(`Branch created ${branch.branchName} created.`);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
 
 program.parse(Deno.args);
