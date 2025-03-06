@@ -62,7 +62,7 @@ function getDefaultBranch(): string | undefined {
   return undefined;
 }
 
-async function getBranchNames(): Promise<string[] | undefined> {
+export async function getBranchNames(): Promise<string[] | undefined> {
   const branchNames: string[] = [];
   for await (const file of await Deno.readDir(".tgit/refs/heads")) {
     branchNames.push(file.name);

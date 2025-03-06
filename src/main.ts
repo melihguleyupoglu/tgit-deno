@@ -25,6 +25,7 @@ import status, {
 } from "./commands/status.ts";
 import getBranchName from "./config/getBranchName.ts";
 import path from "node:path";
+import { getBranchNames } from "./utils/branchUtils.ts";
 
 const HEADS_PATH: string = ".tgit/refs/heads/";
 
@@ -208,22 +209,16 @@ program.command("status", "Show the working tree status").action(async () => {
 });
 
 program
-  .command("branch [branchName]", "Create, list, delete branches")
+  .command("branch", "Create, list, delete branches")
+  .option("-c --create", "Create a branch")
   .option("-l --list", "List all branches")
   .option("-d --delete", "Remove a branch")
   .option("-D", "Force remove")
-  .action(async (args: { branchName?: string }) => {
+  .action(async () => {
     try {
-      if (!args.branchName) {
-        console.log(
-          "Please provide a branch name to create one (tgit branch <branchName>)"
-        );
-        if (program.list) {
-        }
-      } else {
-        const branchPath = path.join(HEADS_PATH, args.branchName);
-        await Deno.writeTextFile(branchPath, "");
-        console.log(`${args.branchName} branch created.`);
+      if (program.list) {
+        const branchNames = await getBranchNames();
+        console.log(branchNames);
       }
     } catch (err) {
       console.error(err);
