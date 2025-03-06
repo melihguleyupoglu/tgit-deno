@@ -215,10 +215,11 @@ program
   .action(async (args: { branchName?: string }) => {
     try {
       if (!args.branchName) {
-        console.log(args.branchName);
         console.log(
           "Please provide a branch name to create one (tgit branch <branchName>)"
         );
+        if (program.list) {
+        }
       } else {
         const branchPath = path.join(HEADS_PATH, args.branchName);
         await Deno.writeTextFile(branchPath, "");

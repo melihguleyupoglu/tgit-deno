@@ -61,3 +61,11 @@ function getDefaultBranch(): string | undefined {
   console.log("Please specify default branch in config file.");
   return undefined;
 }
+
+async function getBranchNames(): Promise<string[] | undefined> {
+  const branchNames: string[] = [];
+  for await (const file of await Deno.readDir(".tgit/refs/heads")) {
+    branchNames.push(file.name);
+  }
+  return branchNames;
+}
