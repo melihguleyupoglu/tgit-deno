@@ -209,6 +209,9 @@ program.command("status", "Show the working tree status").action(async () => {
 
 program
   .command("branch [branchName]", "Create, list, delete branches")
+  .option("-l --list", "List all branches")
+  .option("-d --delete", "Remove a branch")
+  .option("-D", "Force remove")
   .action(async (args: { branchName?: string }) => {
     try {
       if (!args.branchName) {
