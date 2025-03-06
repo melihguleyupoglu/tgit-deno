@@ -225,7 +225,7 @@ program
           return;
         }
         await createBranch(args.name);
-        console.log(`Branch ${name} created.`);
+        console.log(`Branch ${args.name} created.`);
         return;
       }
     } catch (err) {
