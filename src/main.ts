@@ -110,26 +110,26 @@ program
     }
   });
 
-program
-  .command("branch [branch]", "List, create, or delete branches")
-  .option(
-    "-l --list",
-    "List the branches. Optionally specify 'remote' for remote branches."
-  )
-  .option(
-    "-d --delete",
-    "Delete a branch. Optionally specify 'force' for force deletion."
-  )
+// program
+//   .command("branch [branch]", "List, create, or delete branches")
+//   .option(
+//     "-l --list",
+//     "List the branches. Optionally specify 'remote' for remote branches."
+//   )
+//   .option(
+//     "-d --delete",
+//     "Delete a branch. Optionally specify 'force' for force deletion."
+//   )
 
-  .action(async (branch: { branch: string }) => {
-    if (program.list) {
-      await listLocalBranches();
-    } else if (program.delete) {
-      await removeBranch(branch.branch);
-    } else {
-      await createBranch(branch.branch);
-    }
-  });
+//   .action(async (branch: { branch: string }) => {
+//     if (program.list) {
+//       await listLocalBranches();
+//     } else if (program.delete) {
+//       await removeBranch(branch.branch);
+//     } else {
+//       await createBranch(branch.branch);
+//     }
+//   });
 
 program
   .command("switch [branch]", "Switch to a specified branch")
@@ -209,18 +209,17 @@ program.command("status", "Show the working tree status").action(async () => {
 
 program
   .command("branch [branchName]", "Create, list, delete branches")
-  .action(async (branch: { branchName?: string }) => {
+  .action(async (args: { branchName?: string }) => {
     try {
-      if (!branch.branchName) {
-        console.log(branch.branchName);
+      if (!args.branchName) {
+        console.log(args.branchName);
         console.log(
           "Please provide a branch name to create one (tgit branch <branchName>)"
         );
       } else {
-        const branchPath = path.join(HEADS_PATH, branch.branchName);
-        console.log(branchPath);
+        const branchPath = path.join(HEADS_PATH, args.branchName);
         await Deno.writeTextFile(branchPath, "");
-        console.log(`Branch created ${branch.branchName} created.`);
+        console.log(`${args.branchName} branch created.`);
       }
     } catch (err) {
       console.error(err);
