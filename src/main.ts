@@ -207,27 +207,29 @@ program.command("status", "Show the working tree status").action(async () => {
 });
 
 program
-  .command("branch [name]", "Create, list, delete branches")
-  .option("-c --create", "Create a branch")
-  .option("-l --list", "List all branches")
-  .option("-d --delete", "Remove a branch")
-  .option("-D", "Force remove")
-  .action(async (args: { name?: string }) => {
+  .command("branch")
+  .option("-l --list", "List branches in current repository")
+  .option("-d --delete", "Remove a branch in current repository")
+  .option("-D --Delete", "Remove a branch forcefully in current repository.")
+  .action(async () => {
     try {
       if (program.list) {
         const branchNames = await getBranchNames();
         console.log(branchNames);
-        return;
       }
-      if (program.create) {
-        if (!args.name) {
-          console.log("Error: Please provide a branch name");
-          return;
-        }
-        await createBranch(args.name);
-        console.log(`Branch ${args.name} created.`);
-        return;
+      if (program.delete) {
+        // TODO: add branch remover function
       }
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+program
+  .command("branch-create [branchName]")
+  .action(async (args: { branchName: string }) => {
+    try {
+      createBranch(args.branchName);
     } catch (err) {
       console.error(err);
     }
