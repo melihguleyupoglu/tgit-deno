@@ -9,11 +9,7 @@ import {
   readConfigFile,
 } from "./config/configUtils.ts";
 import { commit } from "./commands/commit.ts";
-import {
-  listLocalBranches,
-  removeBranch,
-  createBranch,
-} from "./utils/branchUtils.ts";
+import { removeBranch, createBranch } from "./utils/branchUtils.ts";
 import status, {
   modifiedEntriesOnWorkingSpace,
   modifiedEntriesOnStagingArea,
@@ -109,8 +105,6 @@ program
     }
   });
 
-
-
 program
   .command("switch [branch]", "Switch to a specified branch")
   .action(async (branch: { branch?: string }) => {
@@ -190,16 +184,11 @@ program.command("status", "Show the working tree status").action(async () => {
 program
   .command("branch")
   .option("-l --list", "List branches in current repository")
-  .option("-d --delete", "Remove a branch in current repository")
-  .option("-D --Delete", "Remove a branch forcefully in current repository.")
   .action(async () => {
     try {
       if (program.list) {
-        const branchNames = await listBranches(();
+        const branchNames = await listBranches();
         console.log(branchNames);
-      }
-      if (program.delete) {
-        // TODO: add branch remover function
       }
     } catch (err) {
       console.error(err);
@@ -211,6 +200,16 @@ program
   .action(async (args: { branchName: string }) => {
     try {
       createBranch(args.branchName);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+program
+  .command("branch-remove [branchName]")
+  .action(async (args: { branchName: string }) => {
+    try {
+      await removeBranch(args.branchName);
     } catch (err) {
       console.error(err);
     }
