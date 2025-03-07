@@ -109,26 +109,7 @@ program
     }
   });
 
-// program
-//   .command("branch [branch]", "List, create, or delete branches")
-//   .option(
-//     "-l --list",
-//     "List the branches. Optionally specify 'remote' for remote branches."
-//   )
-//   .option(
-//     "-d --delete",
-//     "Delete a branch. Optionally specify 'force' for force deletion."
-//   )
 
-//   .action(async (branch: { branch: string }) => {
-//     if (program.list) {
-//       await listLocalBranches();
-//     } else if (program.delete) {
-//       await removeBranch(branch.branch);
-//     } else {
-//       await createBranch(branch.branch);
-//     }
-//   });
 
 program
   .command("switch [branch]", "Switch to a specified branch")
