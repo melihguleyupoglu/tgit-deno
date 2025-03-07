@@ -1,17 +1,5 @@
 import { readConfigFile } from "../config/configUtils.ts";
 
-export async function listRemoteBranches() {
-  for await (const branch of Deno.readDir(".tgit/refs/remotes")) {
-    console.log(branch.name);
-  }
-}
-
-export async function listLocalBranches() {
-  for await (const branch of Deno.readDir(".tgit/refs/heads")) {
-    console.log(branch.name);
-  }
-}
-
 export async function createBranch(branchName: string | undefined) {
   const decoder = new TextDecoder("utf-8");
 
@@ -62,7 +50,7 @@ function getDefaultBranch(): string | undefined {
   return undefined;
 }
 
-export async function getBranchNames(): Promise<string[] | undefined> {
+export async function listBranches(): Promise<string[] | undefined> {
   const branchNames: string[] = [];
   for await (const file of await Deno.readDir(".tgit/refs/heads")) {
     branchNames.push(file.name);
