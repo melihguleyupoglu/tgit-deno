@@ -25,7 +25,7 @@ import status, {
 } from "./commands/status.ts";
 import getBranchName from "./config/getBranchName.ts";
 import path from "node:path";
-import { getBranchNames } from "./utils/branchUtils.ts";
+import { listBranches } from "./utils/branchUtils.ts";
 
 // interface BranchOptions {
 //   list?: string;
@@ -214,7 +214,7 @@ program
   .action(async () => {
     try {
       if (program.list) {
-        const branchNames = await getBranchNames();
+        const branchNames = await listBranches(();
         console.log(branchNames);
       }
       if (program.delete) {
