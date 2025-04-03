@@ -25,13 +25,12 @@ export default {
   },
   list(configContent: string) {
     const lines = configContent.split("\n");
-    const userConfigLines = lines.findIndex((line) =>
-      line.startsWith("[user]")
-    );
-    if (userConfigLines >= 0) {
-      console.log(lines.splice(userConfigLines + 1));
-    } else {
-      console.log("No user configs found");
-    }
+    const filteredLines = lines.filter((line) => line.startsWith("\t"));
+    const keyValuePairs = filteredLines.map((line) => {
+      line = line.replace("\t", "");
+      const [key, value] = line.split("=");
+      return { key, value };
+    });
+    console.log(keyValuePairs);
   },
 };
