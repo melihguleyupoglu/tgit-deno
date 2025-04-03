@@ -35,7 +35,6 @@ export async function commit(message: string) {
   const tree = createTree(indexEntries);
   const treeHash = await buildTree(tree, "root");
   const author = await getAuthor();
-  console.log(author);
   if (!author) {
     console.error("Author not found");
     return;
@@ -43,6 +42,7 @@ export async function commit(message: string) {
   const date = Date.now();
   if ((await getPreviousCommitHash()) !== treeHash) {
     const commit = await hashCommit(treeHash, author, message, date);
+    console.log(commit.hash);
     await updateRefWithCommit(
       await createCommit(commit.hash, commit.commitContent)
     );
