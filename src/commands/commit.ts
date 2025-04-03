@@ -23,6 +23,11 @@ interface Commit {
   date: number;
 }
 
+interface Author {
+  username: string;
+  mail: string;
+}
+
 export async function commit(message: string) {
   if (isIndexEmpty()) {
     console.error("No changes to commit.");
@@ -33,6 +38,11 @@ export async function commit(message: string) {
   const tree = createTree(indexEntries);
   const treeHash = await buildTree(tree, "root");
   const author = await getAuthor();
+  console.log(author);
+  if (!author) {
+    console.error("Author not found");
+    return;
+  }
   const date = Date.now();
   if ((await getPreviousCommitHash()) !== treeHash) {
     const commit = await hashCommit(treeHash, author, message, date);
@@ -164,7 +174,7 @@ async function buildTree(tree: TreeView, key: string): Promise<string> {
 
 async function hashCommit(
   treeHash: string,
-  author: string,
+  author: Author,
   message: string,
   date: number,
   parent?: string
@@ -173,8 +183,12 @@ async function hashCommit(
   const commitContent =
     `tree ${treeHash}\n` +
     (parent ? `parent ${parent}\n` : "") +
-    `author ${author} ${Math.floor(date / 1000)} +0000\n` +
-    `committer ${author} ${Math.floor(date / 1000)} +0000\n\n` +
+    `author ${author.username} <${author.mail}> ${Math.floor(
+      date / 1000
+    )} +0000\n` +
+    `committer ${author.username} <${author.mail}> ${Math.floor(
+      date / 1000
+    )} +0000\n\n` +
     `${message}\n`;
   console.log(commitContent);
   const data = encoder.encode(commitContent);
@@ -202,23 +216,26 @@ async function createCommit(
   return commitString;
 }
 
-async function getAuthor(): Promise<string> {
+async function getAuthor(): Promise<Author> {
   const configPath = ".tgit/config";
 
   try {
     const configContent = await Deno.readTextFile(configPath);
     const lines = configContent.split("\n");
-    let author = "";
+    let username = "";
     let mail = "";
     for (const line of lines) {
       if (line.trim().startsWith("username")) {
-        author = line.split("=")[1].trim();
+        username = line.split("=")[1].trim();
+        username = username.replace(/'/g, "");
       } else if (line.trim().startsWith("userMail")) {
         mail = line.split("=")[1].trim();
+        mail = mail.replace(/'/g, "");
       }
     }
-    if (author && mail) {
-      return `${author} <${mail}>`;
+
+    if (username.length > 0 && mail.length > 0) {
+      return { username: username, mail: mail };
     } else {
       throw new Error(
         "Config file does not contain required author or mail fields."
