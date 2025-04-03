@@ -1,6 +1,8 @@
 import { indexPath } from "./add.ts";
 import process from "node:process";
 import { inflate, deflate } from "https://deno.land/x/compress@v0.5.5/mod.ts";
+import { getAuthor } from "../config/configUtils.ts";
+import { Author } from "../config/configUtils.ts";
 
 interface StagingAreaEntry {
   fileInfo: string;
@@ -21,11 +23,6 @@ interface Commit {
   message: string;
   parent?: string;
   date: number;
-}
-
-interface Author {
-  username: string;
-  mail: string;
 }
 
 export async function commit(message: string) {
@@ -214,37 +211,6 @@ async function createCommit(
   const compressedContent = deflate(uint8Array);
   Deno.writeFile(filePath, compressedContent);
   return commitString;
-}
-
-async function getAuthor(): Promise<Author> {
-  const configPath = ".tgit/config";
-
-  try {
-    const configContent = await Deno.readTextFile(configPath);
-    const lines = configContent.split("\n");
-    let username = "";
-    let mail = "";
-    for (const line of lines) {
-      if (line.trim().startsWith("username")) {
-        username = line.split("=")[1].trim();
-        username = username.replace(/'/g, "");
-      } else if (line.trim().startsWith("userMail")) {
-        mail = line.split("=")[1].trim();
-        mail = mail.replace(/'/g, "");
-      }
-    }
-
-    if (username.length > 0 && mail.length > 0) {
-      return { username: username, mail: mail };
-    } else {
-      throw new Error(
-        "Config file does not contain required author or mail fields."
-      );
-    }
-  } catch (error) {
-    console.error("Error reading config file:", error);
-    throw error;
-  }
 }
 
 async function updateRefWithCommit(commitHash: string): Promise<boolean> {

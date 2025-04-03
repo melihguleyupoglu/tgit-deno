@@ -1,6 +1,11 @@
 import * as path from "@std/path";
 const configFilePath = path.join(Deno.cwd(), ".tgit", "config");
 
+export interface Author {
+  username: string;
+  mail: string;
+}
+
 export function ensureConfigFileExists() {
   try {
     Deno.statSync(configFilePath);
@@ -17,22 +22,33 @@ export function writeConfigFile(lines: string[]): void {
   Deno.writeTextFileSync(configFilePath, lines.join("\n"));
 }
 
-export function getUsername(): string {
-  const config = readConfigFile();
-  const lines = config.split("\n");
-  const usernameLine = lines.find((line) => line.startsWith("username="));
-  if (!usernameLine) {
-    throw new Error("Username not found");
-  }
-  return usernameLine.split("=")[1];
-}
+export async function getAuthor(): Promise<Author> {
+  const configPath = ".tgit/config";
 
-export function getUserMail(): string {
-  const config = readConfigFile();
-  const lines = config.split("\n");
-  const userMailLine = lines.find((line) => line.startsWith("userMail="));
-  if (!userMailLine) {
-    throw new Error("User mail not found");
+  try {
+    const configContent = await Deno.readTextFile(configPath);
+    const lines = configContent.split("\n");
+    let username = "";
+    let mail = "";
+    for (const line of lines) {
+      if (line.trim().startsWith("username")) {
+        username = line.split("=")[1].trim();
+        username = username.replace(/'/g, "");
+      } else if (line.trim().startsWith("userMail")) {
+        mail = line.split("=")[1].trim();
+        mail = mail.replace(/'/g, "");
+      }
+    }
+
+    if (username.length > 0 && mail.length > 0) {
+      return { username: username, mail: mail };
+    } else {
+      throw new Error(
+        "Config file does not contain required author or mail fields."
+      );
+    }
+  } catch (error) {
+    console.error("Error reading config file:", error);
+    throw error;
   }
-  return userMailLine.split("=")[1];
 }
