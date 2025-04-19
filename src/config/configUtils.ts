@@ -44,7 +44,7 @@ export async function getAuthor(): Promise<Author> {
       return { username: username, mail: mail };
     } else {
       throw new Error(
-        "Config file does not contain required author or mail fields."
+        "Config file does not contain required author or mail fields. Please use config command to set author information"
       );
     }
   } catch (error) {

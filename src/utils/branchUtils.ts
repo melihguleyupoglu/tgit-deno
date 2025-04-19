@@ -57,3 +57,12 @@ export async function listBranches(): Promise<string[] | undefined> {
   }
   return branchNames;
 }
+
+export async function getCurrentBranchName(): Promise<string | undefined> {
+  const headContent = await Deno.readTextFile(".tgit/HEAD");
+  if (!headContent) {
+    return undefined;
+  }
+  const currentBranch = headContent.split("/")[2];
+  return currentBranch;
+}

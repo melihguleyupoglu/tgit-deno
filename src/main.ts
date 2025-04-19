@@ -9,7 +9,11 @@ import {
   readConfigFile,
 } from "./config/configUtils.ts";
 import { commit } from "./commands/commit.ts";
-import { removeBranch, createBranch } from "./utils/branchUtils.ts";
+import {
+  removeBranch,
+  createBranch,
+  getCurrentBranchName,
+} from "./utils/branchUtils.ts";
 import status, {
   modifiedEntriesOnWorkingSpace,
   modifiedEntriesOnStagingArea,
@@ -20,8 +24,8 @@ import status, {
   notStagedForCommitEntries,
 } from "./commands/status.ts";
 import getBranchName from "./config/getBranchName.ts";
-import path from "node:path";
 import { listBranches } from "./utils/branchUtils.ts";
+import { getParentCommitHash } from "./utils/commitUtils.ts";
 
 // interface BranchOptions {
 //   list?: string;
@@ -214,5 +218,9 @@ program
       console.error(err);
     }
   });
+
+program.command("log").action(async () => {
+  await getParentCommitHash();
+});
 
 program.parse(Deno.args);
